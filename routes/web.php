@@ -77,3 +77,14 @@ Route::get('/force-logout', function () {
     Auth::logout();
     return redirect('/login');
 });
+
+
+Route::controller(PenjualController::class)->prefix('laporan')->group(function () {
+    Route::get('/', 'laporanIndex')->name('laporan.index');
+    Route::get('/data', 'laporanData')->name('laporan.data');
+    Route::get('/chart-penjualan', 'chartPenjualan')->name('laporan.chart-penjualan');
+    Route::get('/chart-status', 'chartStatus')->name('laporan.chart-status');
+    Route::get('/produk-terlaris', 'produkTerlaris')->name('laporan.produk-terlaris');
+    Route::get('/export-detail/{tgl_awal}/{tgl_akhir}/{status}', 'exportDetail')->name('laporan.export-detail');
+    Route::get('/invoice/{id}', 'invoice')->name('laporan.invoice');
+});

@@ -149,4 +149,40 @@ class TransaksiController extends Controller
         }
     }
 
+    public function riwayatTransaksi(Request $request)
+    {
+        if ($request->ajax()) {
+            $query = DB::table('transaksi')
+                ->join('users', 'transaksi.pelanggan_id', '=', 'users.id')
+                ->join('pembayaran', 'transaksi.id', '=', 'pembayaran.transaksi_id')
+                ->select(
+                    'transaksi.id',
+                    'transaksi.waktu_transaksi',
+                    'users.username as pelanggan',
+                    'transaksi.total',
+                    'transaksi.keterangan'
+                )
+                ->orderBy('transaksi.waktu_transaksi', 'desc');
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->editColumn('waktu_transaksi', function ($row) {
+                    return date('d-m-Y H:i', strtotime($row->waktu_transaksi));
+                })
+                ->editColumn('total', function ($row) {
+                    return 'Rp ' . number_format($row->total, 0, ',', '.');
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '';
+                    $btn .= '<button onclick="showDetailModal(' . $row->id . ')" class="btn btn-success btn-sm" title="Lihat Detail"><i class="bx bx-show"></i></button> ';
+                    $btn .= '<button onclick="showInvoice(' . $row->id . ')" class="btn btn-warning btn-sm" title="Lihat Invoice"><i class="bx bx-receipt"></i></button>';
+                    return $btn;
+                })
+                ->rawColumns(['action'])
+                ->make(true);
+
+        }
+        return view('penjual.transaksi.riwayat');
+    }
+
 }
