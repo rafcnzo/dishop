@@ -14,6 +14,7 @@
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
 
     <!-- Google Fonts -->
     <link
@@ -137,6 +138,33 @@
             background: var(--sage);
             transform: scale(1.1) rotate(5deg);
         }
+
+        #search-results-container {
+            z-index: 1050;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 0 0 .275rem .275rem;
+            overflow: hidden;
+        }
+
+        .search-result-item {
+            padding: 0.75rem 1rem;
+        }
+
+        .search-result-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: .25rem;
+        }
+
+        .search-no-result {
+            padding: 1rem;
+            background-color: #fff;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 .375rem .375rem;
+        }
     </style>
 </head>
 
@@ -151,6 +179,8 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
     <!-- Custom JS -->
     <script>
@@ -172,6 +202,198 @@
             document.querySelectorAll('.animate-on-scroll').forEach(el => {
                 observer.observe(el);
             });
+        });
+
+        $(document).ready(function() {
+
+            toastr.options = {
+                "closeButton": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right",
+                "timeOut": "3000", // 3 detik
+            };
+
+            // --- FUNGSI UTAMA UNTUK ME-RENDER TAMPILAN KERANJANG ---
+            function updateCartView(response) {
+                let offcanvasBody = $('#cart-items-container');
+                let cartTotalElement = $('#cart-total');
+                let checkoutForm = $('#checkout-form-container');
+                let cartBadge = $('#cart-count-badge');
+
+                offcanvasBody.empty();
+
+                if (response.cartItems && Object.keys(response.cartItems).length > 0) {
+                    $.each(response.cartItems, function(id, item) {
+                        let priceFormatted = new Intl.NumberFormat('id-ID', {
+                            style: 'currency',
+                            currency: 'IDR',
+                            minimumFractionDigits: 0
+                        }).format(item.price);
+                        let subtotalFormatted = new Intl.NumberFormat('id-ID', {
+                            style: 'currency',
+                            currency: 'IDR',
+                            minimumFractionDigits: 0
+                        }).format(item.price * item.qty);
+
+                        let cartItemHtml = `
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="d-flex align-items-center">
+                            <img src="${item.image}" width="60" class="rounded me-3">
+                            <div>
+                                <h6 class="mb-0 small">${item.name}</h6>
+                                <small class="text-muted">${priceFormatted}</small>
+                                <div class="fw-bold mt-1">${subtotalFormatted}</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <div class="input-group input-group-sm" style="width: 100px;">
+                                <button class="btn btn-outline-secondary qty-change" type="button" data-product-id="${id}" data-action="minus">-</button>
+                                <input type="text" class="form-control text-center qty-input" value="${item.qty}" readonly>
+                                <button class="btn btn-outline-secondary qty-change" type="button" data-product-id="${id}" data-action="plus">+</button>
+                            </div>
+                            <button class="btn btn-sm btn-danger ms-2 remove-item-btn" data-product-id="${id}">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>`;
+                        offcanvasBody.append(cartItemHtml);
+                    });
+
+                    let totalFormatted = new Intl.NumberFormat('id-ID', {
+                        style: 'currency',
+                        currency: 'IDR',
+                        minimumFractionDigits: 0
+                    }).format(response.cartTotal);
+                    cartTotalElement.text(totalFormatted);
+                    if (checkoutForm.length) checkoutForm.show();
+                } else {
+                    offcanvasBody.html('<p class="text-center text-muted mt-5">Keranjang Anda masih kosong.</p>');
+                    cartTotalElement.text('Rp 0');
+                    if (checkoutForm.length) checkoutForm.hide();
+                }
+
+                if (cartBadge.length) {
+                    cartBadge.text(response.cartCount > 0 ? response.cartCount : '');
+                }
+            }
+
+            // --- FUNGSI UNTUK MENGIRIM REQUEST AJAX KERANJANG ---
+            function sendCartRequest(url, method, data = {}) {
+                $.ajax({
+                    url: url,
+                    method: method,
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        ...data
+                    },
+                    success: function(response) {
+                        updateCartView(response);
+                    },
+                    error: function() {
+                        // GANTI alert DENGAN toastr.error
+                        toastr.error('Terjadi kesalahan. Silakan coba lagi.');
+                    }
+                });
+            }
+
+            // --- EVENT LISTENERS UNTUK KERANJANG ---
+            $('#cart-toggle-btn').on('click', function() {
+                sendCartRequest('{{ route('cart.items') }}', 'GET');
+            });
+
+            $(document).on('click', '.add-to-cart-btn', function(e) {
+                e.preventDefault();
+                let productId = $(this).data('product-id');
+                sendCartRequest(`/cart/add/${productId}`, 'POST');
+                toastr.success('Produk berhasil ditambahkan ke keranjang!');
+            });
+
+            $(document).on('click', '.qty-change', function() {
+                let productId = $(this).data('product-id');
+                let action = $(this).data('action');
+                let currentQty = parseInt($(this).closest('.input-group').find('.qty-input').val());
+                let newQty = (action === 'plus') ? currentQty + 1 : currentQty - 1;
+
+                if (newQty > 0) {
+                    sendCartRequest(`/cart/update/${productId}`, 'POST', {
+                        quantity: newQty
+                    });
+                } else {
+                    sendCartRequest(`/cart/remove/${productId}`, 'POST');
+                }
+            });
+
+            $(document).on('click', '.remove-item-btn', function() {
+                if (confirm('Anda yakin ingin menghapus item ini?')) {
+                    let productId = $(this).data('product-id');
+                    sendCartRequest(`/cart/remove/${productId}`, 'POST');
+                }
+            });
+
+
+            // =================================================================
+            // BAGIAN PENCARIAN PRODUK (SEARCH)
+            // =================================================================
+
+            function debounce(func, delay) {
+                let timeout;
+                return function(...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), delay);
+                };
+            }
+
+            $('#search-input').on('keyup', debounce(function() {
+                let query = $(this).val();
+                let resultsContainer = $('#search-results-container');
+
+                if (query.length > 2) {
+                    $.ajax({
+                        url: '{{ route('products.search') }}',
+                        type: 'GET',
+                        data: {
+                            'query': query
+                        },
+                        success: function(data) {
+                            resultsContainer.empty().show();
+                            if (data.length > 0) {
+                                let resultsList = $('<ul class="list-group"></ul>');
+                                $.each(data, function(index, product) {
+                                    let priceFormatted = new Intl.NumberFormat(
+                                        'id-ID', {
+                                            style: 'currency',
+                                            currency: 'IDR',
+                                            minimumFractionDigits: 0
+                                        }).format(product.harga);
+                                    let listItem = `
+                                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center search-result-item">
+                                    <img src="${product.image_url}" class="me-3 search-result-img" alt="${product.nama_barang}">
+                                    <div>
+                                        <div class="fw-bold">${product.nama_barang}</div>
+                                        <small>${priceFormatted}</small>
+                                    </div>
+                                </a>`;
+                                    resultsList.append(listItem);
+                                });
+                                resultsContainer.html(resultsList);
+                            } else {
+                                resultsContainer.html(
+                                    '<div class="search-no-result">Tidak ada produk ditemukan.</div>'
+                                );
+                            }
+                        }
+                    });
+                } else {
+                    resultsContainer.empty().hide();
+                }
+            }, 500));
+
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#search-input, #search-results-container').length) {
+                    $('#search-results-container').empty().hide();
+                }
+            });
+
         });
     </script>
 

@@ -89,9 +89,10 @@
                             </div>
                         </div>
 
+                        
                         <div class="hero-floating-cards">
                             <div
-                                class="floating-card floating-card-1 animate__animated animate__fadeInUp animate__delay-1s">
+                                class="floating-card floating-card-1 animate__animated animate__fadeInLeft animate__delay-1s">
                                 <div class="card border-0 shadow">
                                     <div class="card-body text-center p-3">
                                         <i class="fas fa-cogs text-primary fs-4 mb-2"></i>
@@ -102,7 +103,7 @@
                             </div>
 
                             <div
-                                class="floating-card floating-card-2 animate__animated animate__fadeInUp animate__delay-2s">
+                                class="floating-card floating-card-2 animate__animated animate__fadeInLeft animate__delay-2s">
                                 <div class="card border-0 shadow">
                                     <div class="card-body text-center p-3">
                                         <i class="fas fa-tools text-primary fs-4 mb-2"></i>
@@ -113,7 +114,7 @@
                             </div>
 
                             <div
-                                class="floating-card floating-card-3 animate__animated animate__fadeInUp animate__delay-3s">
+                                class="floating-card floating-card-3 animate__animated animate__fadeInLeft animate__delay-3s">
                                 <div class="card border-0 shadow">
                                     <div class="card-body text-center p-3">
                                         <i class="fas fa-oil-can text-primary fs-4 mb-2"></i>
@@ -159,175 +160,11 @@
 
             <!-- Grid produk -->
             <div class="products-grid">
-                <div class="row g-4">
-                    <!-- Product 1 -->
-                    <div class="col-lg-3 col-md-6 animate-on-scroll animate__fadeInUp">
-                        <div class="product-card-enhanced">
-                            <div class="product-badge">
-                                <span class="badge bg-danger">Best Seller</span>
-                            </div>
-                            <div class="product-image-container">
-                                <img src="https://via.placeholder.com/300x240/1a5f3f/ffffff?text=AGV+Helmet" alt="Helm AGV"
-                                    class="product-image">
-                                <div class="product-overlay">
-                                    <div class="product-actions">
-                                        <button class="btn btn-light btn-sm rounded-circle">
-                                            <i class="fas fa-heart"></i>
-                                        </button>
-                                        <button class="btn btn-light btn-sm rounded-circle">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="product-content">
-                                <div class="product-category">
-                                    <small class="text-muted">Helmet</small>
-                                </div>
-                                <h6 class="product-title">Helm AGV K1 Solid</h6>
-                                <p class="product-description">
-                                    Helm full face dengan standar keamanan internasional DOT & SNI
-                                </p>
-                                <div class="product-price-section">
-                                    <div class="price-container">
-                                        <span class="current-price">Rp 1.250.000</span>
-                                        <span class="original-price">Rp 1.450.000</span>
-                                    </div>
-                                    <div class="discount-badge">
-                                        -14%
-                                    </div>
-                                </div>
-                                <button class="btn btn-primary product-btn w-100">
-                                    <i class="fas fa-cart-plus me-2"></i>
-                                    Pesan Sekarang !!!
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 2 -->
-                    <div class="col-lg-3 col-md-6 animate-on-scroll animate__fadeInUp animate__delay-1s">
-                        <div class="product-card-enhanced">
-                            <div class="product-badge">
-                                <span class="badge bg-success">New Arrival</span>
-                            </div>
-                            <div class="product-image-container">
-                                <img src="https://via.placeholder.com/300x240/87a96b/ffffff?text=Respiro+Jacket"
-                                    alt="Jaket Touring" class="product-image">
-                                <div class="product-overlay">
-                                    <div class="product-actions">
-                                        <button class="btn btn-light btn-sm rounded-circle">
-                                            <i class="fas fa-heart"></i>
-                                        </button>
-                                        <button class="btn btn-light btn-sm rounded-circle">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="product-content">
-                                <div class="product-category">
-                                    <small class="text-muted">Jacket</small>
-                                </div>
-                                <h6 class="product-title">Jaket Touring Respiro</h6>
-                                <p class="product-description">
-                                    Jaket anti angin dengan protector lengkap dan ventilasi udara
-                                </p>
-                                <div class="product-price-section">
-                                    <div class="price-container">
-                                        <span class="current-price">Rp 850.000</span>
-                                    </div>
-                                </div>
-                                <button class="btn btn-primary product-btn w-100">
-                                    <i class="fas fa-cart-plus me-2"></i>
-                                    Pesan Sekarang !!!
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 3 -->
-                    <div class="col-lg-3 col-md-6 animate-on-scroll animate__fadeInUp animate__delay-2s">
-                        <div class="product-card-enhanced">
-                            <div class="product-image-container">
-                                <img src="https://via.placeholder.com/300x240/c7d2cc/ffffff?text=Taichi+Gloves"
-                                    alt="Sarung Tangan" class="product-image">
-                                <div class="product-overlay">
-                                    <div class="product-actions">
-                                        <button class="btn btn-light btn-sm rounded-circle">
-                                            <i class="fas fa-heart"></i>
-                                        </button>
-                                        <button class="btn btn-light btn-sm rounded-circle">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="product-content">
-                                <div class="product-category">
-                                    <small class="text-muted">Gloves</small>
-                                </div>
-                                <h6 class="product-title">Sarung Tangan Taichi</h6>
-                                <p class="product-description">
-                                    Sarung tangan kulit premium dengan protector knuckle carbon
-                                </p>
-                                <div class="product-price-section">
-                                    <div class="price-container">
-                                        <span class="current-price">Rp 320.000</span>
-                                        <span class="original-price">Rp 380.000</span>
-                                    </div>
-                                    <div class="discount-badge">
-                                        -16%
-                                    </div>
-                                </div>
-                                <button class="btn btn-primary product-btn w-100">
-                                    <i class="fas fa-cart-plus me-2"></i>
-                                    Pesan Sekarang !!!
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Product 4 -->
-                    <div class="col-lg-3 col-md-6 animate-on-scroll animate__fadeInUp animate__delay-3s">
-                        <div class="product-card-enhanced">
-                            <div class="product-badge">
-                                <span class="badge bg-warning text-dark">Limited</span>
-                            </div>
-                            <div class="product-image-container">
-                                <img src="https://via.placeholder.com/300x240/f8f9fa/1a5f3f?text=Alpinestars+Boots"
-                                    alt="Sepatu Boots" class="product-image">
-                                <div class="product-overlay">
-                                    <div class="product-actions">
-                                        <button class="btn btn-light btn-sm rounded-circle">
-                                            <i class="fas fa-heart"></i>
-                                        </button>
-                                        <button class="btn btn-light btn-sm rounded-circle">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="product-content">
-                                <div class="product-category">
-                                    <small class="text-muted">Boots</small>
-                                </div>
-                                <h6 class="product-title">Sepatu Boots Alpinestars</h6>
-                                <p class="product-description">
-                                    Sepatu touring waterproof dengan proteksi ankle dan toe
-                                </p>
-                                <div class="product-price-section">
-                                    <div class="price-container">
-                                        <span class="current-price">Rp 1.150.000</span>
-                                    </div>
-                                </div>
-                                <button class="btn btn-primary product-btn w-100">
-                                    <i class="fas fa-cart-plus me-2"></i>
-                                    Pesan Sekarang !!!
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                {{-- Beri ID pada row ini agar mudah ditarget oleh JavaScript --}}
+                <div class="row g-4" id="product-grid">
+                    @foreach ($products as $product)
+                        @include('layouts.partials._product_card', ['product' => $product])
+                    @endforeach
                 </div>
             </div>
 
@@ -337,11 +174,11 @@
                     <p class="mb-4 text-muted">Lihat koleksi lengkap kami dengan lebih dari 500+ produk berkualitas di
                         <b>Toko Bintang Motor Batam</b>
                     </p>
-                    <a href="#" class="btn btn-outline-primary btn-lg px-5 cta-btn">
+                    <button id="load-more-btn" class="btn btn-outline-primary btn-lg px-5 cta-btn" data-page="2">
                         <i class="fas fa-th-large me-2"></i>
-                        Jelajahi Semua Produk
+                        <span>Jelajahi Lebih Banyak</span>
                         <i class="fas fa-arrow-right ms-2"></i>
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -425,3 +262,53 @@
         </div>
     </section>
 @endsection
+@push('scripts') {{-- Jika Anda menggunakan stack 'scripts' di layout --}}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#load-more-btn').on('click', function() {
+        const btn = $(this);
+        let page = btn.data('page');
+        const originalText = btn.find('span').text();
+
+        $.ajax({
+            url: '{{ route("products.load_more") }}',
+            type: 'GET',
+            data: { 
+                page: page 
+            },
+            beforeSend: function() {
+                // Tampilkan status loading
+                btn.prop('disabled', true);
+                btn.find('span').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memuat...');
+            },
+            success: function(response) {
+                if (response.html.trim() !== '') {
+                    // Tambahkan produk baru ke grid
+                    $('#product-grid').append(response.html);
+                    // Update nomor halaman untuk request berikutnya
+                    btn.data('page', page + 1);
+
+                    // Sembunyikan tombol jika sudah tidak ada produk lagi
+                    if (!response.hasMore) {
+                        btn.hide();
+                    }
+                } else {
+                    // Jika tidak ada data lagi, sembunyikan tombol
+                    btn.hide();
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Terjadi kesalahan: ", error);
+                alert('Gagal memuat produk. Silakan coba lagi.');
+            },
+            complete: function() {
+                // Kembalikan tombol ke keadaan semula
+                btn.prop('disabled', false);
+                btn.find('span').text(originalText);
+            }
+        });
+    });
+});
+</script>
+@endpush
