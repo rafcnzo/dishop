@@ -17,6 +17,7 @@ return new class extends Migration
             $table->unsignedBigInteger('transaksi_id');
             $table->string('bukti_transfer')->nullable();
             $table->enum('status_pembayaran', ['T', 'F'])->nullable()->comment('T=Disetujui, F=Ditolak');
+            $table->string('metode')->nullable();
             $table->string('keterangan')->nullable();
             $table->dateTime('waktu')->nullable()->comment('Waktu pembayaran');
             $table->dateTime('dtmodi')->nullable();
