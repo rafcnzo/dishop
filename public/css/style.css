@@ -565,13 +565,13 @@
   position: relative;
 }
 
-.section-subtitle {
+/* .section-subtitle {
   font-size: 1.1rem;
   color: #6b7280;
   max-width: 600px;
   margin: 0 auto;
   line-height: 1.6;
-}
+} */
 
 /* Enhanced Product Cards */
 .product-card-enhanced {

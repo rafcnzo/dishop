@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\CustomerController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('index');
@@ -95,5 +96,10 @@ Route::middleware(['auth', 'role:pembeli'])->group(function () {
     Route::get('/cart/items', [App\Http\Controllers\CartController::class, 'getCartItems'])->name('cart.items');
     Route::post('/cart/update/{productId}', [App\Http\Controllers\CartController::class, 'updateCart'])->name('cart.update');
     Route::post('/cart/remove/{productId}', [App\Http\Controllers\CartController::class, 'removeCartItem'])->name('cart.remove');
+
     Route::post('/checkout', [App\Http\Controllers\CheckoutController::class, 'processCheckout'])->name('checkout.process');
+
+    Route::get('/myorders',[App\Http\Controllers\CustomerController::class, 'indexOrders'])->name('orders');
+    Route::get('/myorders/{id}',[App\Http\Controllers\CustomerController::class, 'showOrder'])->name('orders.show');
+    Route::get('/invoice/{id}',[App\Http\Controllers\CustomerController::class, 'showInvoice'])->name('invoice.show');
 });

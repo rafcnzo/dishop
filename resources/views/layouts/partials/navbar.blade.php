@@ -19,7 +19,7 @@
                 </li>
                 @auth
                     <li class="nav-item">
-                        <a class="nav-link fw-semibold nav-link-hover" href="#">Pesanan Saya</a>
+                        <a class="nav-link fw-semibold nav-link-hover" href="{{ route('orders') }}">Pesanan Saya</a>
                     </li>
                 @endauth
             </ul>

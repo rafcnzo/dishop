@@ -166,6 +166,8 @@
             border-radius: 0 0 .375rem .375rem;
         }
     </style>
+
+    @yield('styles')
 </head>
 
 <body>
