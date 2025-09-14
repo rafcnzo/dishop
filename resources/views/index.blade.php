@@ -284,17 +284,13 @@ $(document).ready(function() {
             },
             success: function(response) {
                 if (response.html.trim() !== '') {
-                    // Tambahkan produk baru ke grid
                     $('#product-grid').append(response.html);
-                    // Update nomor halaman untuk request berikutnya
                     btn.data('page', page + 1);
 
-                    // Sembunyikan tombol jika sudah tidak ada produk lagi
                     if (!response.hasMore) {
                         btn.hide();
                     }
                 } else {
-                    // Jika tidak ada data lagi, sembunyikan tombol
                     btn.hide();
                 }
             },
@@ -303,7 +299,6 @@ $(document).ready(function() {
                 alert('Gagal memuat produk. Silakan coba lagi.');
             },
             complete: function() {
-                // Kembalikan tombol ke keadaan semula
                 btn.prop('disabled', false);
                 btn.find('span').text(originalText);
             }

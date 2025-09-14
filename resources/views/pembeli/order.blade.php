@@ -2,7 +2,7 @@
 
 @section('title', 'Pesanan Saya - Toko Bintang Motor Batam')
 
-@section('styles')
+@push('styles')
     <style>
         /* Color Variables - Enhanced Contrast */
         :root {
@@ -63,7 +63,6 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
             opacity: 0.4;
         }
 
@@ -377,6 +376,27 @@
             color: white;
         }
 
+        /* Custom Success Button */
+        .btn-success-custom {
+            background: linear-gradient(135deg, #28a745, #7a9a5a); /* Hijau sukses ke sage */
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-success-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.25);
+            color: white;
+        }
+
         .btn-outline-custom {
             background: transparent;
             border: 2px solid var(--pakistan-green);
@@ -498,7 +518,7 @@
             }
         }
     </style>
-@endsection
+@endpush
 
 @section('content')
     <div class="orders-page">
@@ -604,6 +624,11 @@
                                 <a href="#" class="btn-outline-custom">
                                     <i class="fas fa-download"></i> Download Invoice
                                 </a>
+                                @if($order->timeline_status == 'pending')
+                                    <a href="{{ route('payment.confirmation', $order->id) }}" class="btn btn-success-custom">
+                                        <i class="fas fa-credit-card"></i> Lakukan Pembayaran
+                                    </a>
+                                @endif
                             </div>
                         </div>
 
@@ -613,14 +638,13 @@
                                 <i class="fas fa-route me-2"></i>Lacak Pesanan
                             </h6>
 
-                            @if ($order->timeline_status == 'dibatalkan')
+                            @if ($order->timeline_status == 'cancelled')
                                 <div class="cancelled-state">
                                     <div class="cancelled-icon">
                                         <i class="fas fa-times-circle"></i>
                                     </div>
                                     <h5 class="text-danger mb-2">Pesanan Dibatalkan</h5>
-                                    <p class="text-muted mb-0">Pesanan ini telah dibatalkan dan tidak dapat diproses lebih
-                                        lanjut.</p>
+                                    <p class="text-muted mb-0">Pesanan ini telah dibatalkan dan tidak dapat diproses lebih lanjut.</p>
                                 </div>
                             @else
                                 <div class="stepper-wrapper">
@@ -661,7 +685,9 @@
                 <!-- Pagination -->
                 @if ($orders->hasPages())
                     <div class="d-flex justify-content-center mt-5">
-                        {{ $orders->links() }}
+                        <nav aria-label="Navigasi halaman pesanan">
+                            {{ $orders->onEachSide(1)->links() }}
+                        </nav>
                     </div>
                 @endif
             </div>

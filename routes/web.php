@@ -7,6 +7,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('index');
@@ -97,7 +99,13 @@ Route::middleware(['auth', 'role:pembeli'])->group(function () {
     Route::post('/cart/update/{productId}', [App\Http\Controllers\CartController::class, 'updateCart'])->name('cart.update');
     Route::post('/cart/remove/{productId}', [App\Http\Controllers\CartController::class, 'removeCartItem'])->name('cart.remove');
 
-    Route::post('/checkout', [App\Http\Controllers\CheckoutController::class, 'processCheckout'])->name('checkout.process');
+    Route::post('/checkout', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
+    Route::get('/pembayaran', [CheckoutController::class, 'showPaymentPage'])->name('checkout.show');
+
+    Route::post('/place-order', [OrderController::class, 'placeOrder'])->name('order.place');
+    Route::get('/konfirmasi-pembayaran/{order}', [OrderController::class, 'showConfirmationPage'])->name('payment.confirmation');
+    Route::post('/submit-konfirmasi', [OrderController::class, 'submitConfirmation'])->name('payment.confirm');
+    Route::post('/order/cancel/{id}', [OrderController::class, 'cancelOrder'])->name('order.cancel');
 
     Route::get('/myorders',[App\Http\Controllers\CustomerController::class, 'indexOrders'])->name('orders');
     Route::get('/myorders/{id}',[App\Http\Controllers\CustomerController::class, 'showOrder'])->name('orders.show');

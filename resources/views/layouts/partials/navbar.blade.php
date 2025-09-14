@@ -15,7 +15,7 @@
                     <a class="nav-link fw-semibold nav-link-hover" href="{{ url('/') }}">Beranda</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link fw-semibold nav-link-hover" href="#">Produk</a>
+                    <a class="nav-link fw-semibold nav-link-hover" href="{{ url('/#products') }}">Produk</a>
                 </li>
                 @auth
                     <li class="nav-item">
@@ -25,7 +25,6 @@
             </ul>
 
             <ul class="navbar-nav ms-auto align-items-center">
-                {{-- Search bar di kanan, sebelum keranjang --}}
                 <li class="nav-item me-2 position-relative" style="width: 350px;">
                     <form class="d-flex align-items-center" role="search" action="{{-- route('search.page') --}}"
                         method="GET">
@@ -93,22 +92,14 @@
                 <span id="cart-total">Rp 0</span>
             </div>
 
-            @if (Session::has('cart') && count(Session::get('cart')) > 0)
-            <div id="checkout-form-container" style="display: none;">
-                <form action="{{ route('checkout.process') }}" method="POST">
+            <div class="d-grid">
+                <form action="{{ route('checkout.process') }}" method="POST" class="d-grid">
                     @csrf
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary fw-bold">
-                            Lanjutkan ke Checkout
-                        </button>
-                    </div>
+                    <button type="submit" id="checkout-btn" class="btn btn-primary fw-bold" disabled>
+                        Lanjutkan ke Checkout
+                    </button>
                 </form>
             </div>
-            @else
-                <div class="d-grid">
-                    <button class="btn btn-primary fw-bold" disabled>Checkout</button>
-                </div>
-            @endif
         </div>
     </div>
 @endauth

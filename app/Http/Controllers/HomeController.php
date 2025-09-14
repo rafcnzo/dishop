@@ -123,6 +123,4 @@ class HomeController extends Controller
 
         return response()->json([]); // Kembalikan array kosong jika tidak ada query
     }
-
-
 }

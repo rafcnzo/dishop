@@ -12,7 +12,7 @@ class CustomerController extends Controller
             ->select('transaksi.*')
             // ->where('pelanggan_id', auth()->id())
             ->orderBy('transaksi.waktu_transaksi', 'desc')
-            ->paginate(10);
+            ->paginate(5);
 
         // Loop untuk setiap pesanan dan siapkan data untuk view
         foreach ($orders as $order) {
@@ -57,7 +57,7 @@ class CustomerController extends Controller
                     $timelineStatus = 'selesai';
                     $statusText     = 'Selesai';
                     break;
-                case 'dibatalkan':
+                case 'cancelled':
                     $timelineStatus = 'cancelled';
                     $statusText     = 'Pesanan Dibatalkan';
                     break;

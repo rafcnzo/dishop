@@ -1,25 +1,44 @@
 <?php
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Http\Request;
-
 
 class CartController extends Controller
 {
     public function addToCart($productId)
     {
+        // Ambil data produk
         $product = DB::table('products')->where('id', $productId)->first();
 
+        // Cek apakah produk ada
         if (! $product) {
-            return response()->json(['success' => false, 'message' => 'Produk tidak ditemukan!']);
+            return response()->json([
+                'success' => false,
+                'message' => 'Produk tidak ditemukan!',
+            ], 404);
+        }
+
+        // Cek stok produk
+        if ($product->stok < 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Stok produk habis!',
+            ], 422);
         }
 
         $cart = Session::get('cart', []);
 
+        // Jika produk sudah ada di keranjang, tambahkan qty 1, tapi cek stok
         if (isset($cart[$productId])) {
-            $cart[$productId]['qty']++;
+            if ($cart[$productId]['qty'] + 1 > $product->stok) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Stok tidak mencukupi! Hanya tersisa ' . $product->stok,
+                ], 422);
+            }
+            $cart[$productId]['qty'] += 1;
         } else {
             $cart[$productId] = [
                 "name"  => $product->nama_barang,
@@ -30,8 +49,6 @@ class CartController extends Controller
         }
 
         Session::put('cart', $cart);
-
-        // Panggil helper method untuk mengembalikan data keranjang lengkap
         return $this->getCartDataForResponse();
     }
 
@@ -44,13 +61,27 @@ class CartController extends Controller
     {
         $cart     = Session::get('cart', []);
         $quantity = $request->input('quantity');
+        $product = DB::table('products')->where('id', $productId)->first();
 
-        // Validasi: pastikan kuantitas valid dan produk ada di keranjang
+        if (! $product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Produk tidak ditemukan!',
+            ], 404);
+        }
+
+        if ($quantity > $product->stok) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Stok tidak mencukupi! Hanya tersisa ' . $product->stok,
+            ], 422); // 422 Unprocessable Entity
+        }
+        $quantity = $request->input('quantity');
+
         if (isset($cart[$productId]) && $quantity > 0) {
             $cart[$productId]['qty'] = $quantity;
             Session::put('cart', $cart);
 
-            // Setelah update, kirim kembali seluruh data keranjang yang sudah diperbarui
             return $this->getCartDataForResponse();
         }
 
