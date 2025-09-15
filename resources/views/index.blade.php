@@ -8,7 +8,7 @@
         <!-- Added background pattern and improved layout structure -->
         <div class="hero-bg-pattern"></div>
         <div class="container position-relative">
-            <div class="row align-items-center min-vh-100 py-5">
+            <div class="row align-items-center min-vh-100 py-3">
                 <div class="col-lg-6 order-2 order-lg-1">
                     <div class="hero-content animate__animated animate__fadeInLeft">
                         <div class="hero-badge mb-4">
@@ -89,7 +89,7 @@
                             </div>
                         </div>
 
-                        
+
                         <div class="hero-floating-cards">
                             <div
                                 class="floating-card floating-card-1 animate__animated animate__fadeInLeft animate__delay-1s">
@@ -130,7 +130,7 @@
         </div>
 
         <!-- Added scroll indicator -->
-        <div class="scroll-indicator">
+        <div class="scroll-indicator d-none d-md-block">
             <a href="#products" class="scroll-down">
                 <span></span>
                 <span></span>
@@ -160,7 +160,6 @@
 
             <!-- Grid produk -->
             <div class="products-grid">
-                {{-- Beri ID pada row ini agar mudah ditarget oleh JavaScript --}}
                 <div class="row g-4" id="product-grid">
                     @foreach ($products as $product)
                         @include('layouts.partials._product_card', ['product' => $product])
@@ -262,48 +261,51 @@
         </div>
     </section>
 @endsection
-@push('scripts') {{-- Jika Anda menggunakan stack 'scripts' di layout --}}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-$(document).ready(function() {
-    $('#load-more-btn').on('click', function() {
-        const btn = $(this);
-        let page = btn.data('page');
-        const originalText = btn.find('span').text();
+@push('scripts')
+    {{-- Jika Anda menggunakan stack 'scripts' di layout --}}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#load-more-btn').on('click', function() {
+                const btn = $(this);
+                let page = btn.data('page');
+                const originalText = btn.find('span').text();
 
-        $.ajax({
-            url: '{{ route("products.load_more") }}',
-            type: 'GET',
-            data: { 
-                page: page 
-            },
-            beforeSend: function() {
-                // Tampilkan status loading
-                btn.prop('disabled', true);
-                btn.find('span').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memuat...');
-            },
-            success: function(response) {
-                if (response.html.trim() !== '') {
-                    $('#product-grid').append(response.html);
-                    btn.data('page', page + 1);
+                $.ajax({
+                    url: '{{ route('products.load_more') }}',
+                    type: 'GET',
+                    data: {
+                        page: page
+                    },
+                    beforeSend: function() {
+                        // Tampilkan status loading
+                        btn.prop('disabled', true);
+                        btn.find('span').html(
+                            '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memuat...'
+                        );
+                    },
+                    success: function(response) {
+                        if (response.html.trim() !== '') {
+                            $('#product-grid').append(response.html);
+                            btn.data('page', page + 1);
 
-                    if (!response.hasMore) {
-                        btn.hide();
+                            if (!response.hasMore) {
+                                btn.hide();
+                            }
+                        } else {
+                            btn.hide();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Terjadi kesalahan: ", error);
+                        alert('Gagal memuat produk. Silakan coba lagi.');
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false);
+                        btn.find('span').text(originalText);
                     }
-                } else {
-                    btn.hide();
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error("Terjadi kesalahan: ", error);
-                alert('Gagal memuat produk. Silakan coba lagi.');
-            },
-            complete: function() {
-                btn.prop('disabled', false);
-                btn.find('span').text(originalText);
-            }
+                });
+            });
         });
-    });
-});
-</script>
+    </script>
 @endpush

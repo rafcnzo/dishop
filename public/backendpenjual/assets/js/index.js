@@ -2,8 +2,10 @@ $(function() {
     "use strict";
 
      // chart 1
-	 
+	 	var chart1 = document.getElementById("chart1");
+	 	if (chart1) {
 		  var ctx = document.getElementById('chart1').getContext('2d');
+		}
 		
 			var myChart = new Chart(ctx, {
 				type: 'line',

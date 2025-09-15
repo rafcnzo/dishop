@@ -10,12 +10,10 @@ class CheckoutController extends Controller
 {
     public function processCheckout(Request $request)
     {
-        // Validasi, pastikan keranjang tidak kosong
         if (! Session::has('cart') || count(Session::get('cart')) == 0) {
             return redirect('/')->with('error', 'Keranjang Anda kosong!');
         }
 
-        // Jika valid, langsung arahkan ke halaman untuk menampilkan data pembayaran
         return redirect()->route('checkout.show');
     }
 
@@ -43,11 +41,10 @@ class CheckoutController extends Controller
 
         $user = Auth::user();
 
-        // Kirim data yang sudah disederhanakan ke view
         return view('pembeli.checkout', [
-            'cartItems' => collect($cartItems),
+            'cartItems'  => collect($cartItems),
             'user'       => $user,
-            'grandTotal' => $grandTotal, // Hanya kirim grandTotal
+            'grandTotal' => $grandTotal,
         ]);
     }
 }

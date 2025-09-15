@@ -35,6 +35,7 @@
                 width: 0;
                 opacity: 0;
             }
+
             100% {
                 width: 100px;
                 opacity: 1;
@@ -378,7 +379,8 @@
 
         /* Custom Success Button */
         .btn-success-custom {
-            background: linear-gradient(135deg, #28a745, #7a9a5a); /* Hijau sukses ke sage */
+            background: linear-gradient(135deg, #28a745, #7a9a5a);
+            /* Hijau sukses ke sage */
             border: none;
             color: white;
             padding: 0.75rem 1.5rem;
@@ -462,22 +464,22 @@
         }
 
         /* Modal Enhancements */
-        .modal-content {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-        }
+        /* .modal-content {
+                                    border: none;
+                                    border-radius: 16px;
+                                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+                                }
 
-        .modal-header {
-            background: var(--pakistan-green);
-            color: white;
-            border-radius: 16px 16px 0 0;
-            padding: 1.5rem;
-        }
+                                .modal-header {
+                                    background: var(--pakistan-green);
+                                    color: white;
+                                    border-radius: 16px 16px 0 0;
+                                    padding: 1.5rem;
+                                }
 
-        .modal-title {
-            font-weight: 700;
-        }
+                                .modal-title {
+                                    font-weight: 700;
+                                } */
 
         .btn-close {
             filter: invert(1);
@@ -554,18 +556,18 @@
                                 'icon' => 'fa-clock',
                                 'desc' => 'Menunggu konfirmasi penjual',
                             ],
-                            [
-                                'status' => 'diproses',
-                                'name' => 'Diproses',
-                                'icon' => 'fa-box-open',
-                                'desc' => 'Sedang dipersiapkan',
-                            ],
-                            [
-                                'status' => 'diterima',
-                                'name' => 'Diterima',
-                                'icon' => 'fa-handshake',
-                                'desc' => 'Pesanan diterima pembeli',
-                            ],
+                            // [
+                            //     'status' => 'diproses',
+                            //     'name' => 'Diproses',
+                            //     'icon' => 'fa-box-open',
+                            //     'desc' => 'Sedang dipersiapkan',
+                            // ],
+                            // [
+                            //     'status' => 'diterima',
+                            //     'name' => 'Diterima',
+                            //     'icon' => 'fa-handshake',
+                            //     'desc' => 'Pesanan diterima pembeli',
+                            // ],
                             [
                                 'status' => 'selesai',
                                 'name' => 'Selesai',
@@ -624,8 +626,9 @@
                                 <a href="#" class="btn-outline-custom">
                                     <i class="fas fa-download"></i> Download Invoice
                                 </a>
-                                @if($order->timeline_status == 'pending')
-                                    <a href="{{ route('payment.confirmation', $order->id) }}" class="btn btn-success-custom">
+                                @if ($order->timeline_status == 'pending')
+                                    <a href="{{ route('payment.confirmation', $order->id) }}"
+                                        class="btn btn-success-custom">
                                         <i class="fas fa-credit-card"></i> Lakukan Pembayaran
                                     </a>
                                 @endif
@@ -638,13 +641,21 @@
                                 <i class="fas fa-route me-2"></i>Lacak Pesanan
                             </h6>
 
-                            @if ($order->timeline_status == 'cancelled')
+                            @if ($order->timeline_status == 'dibatalkan')
                                 <div class="cancelled-state">
                                     <div class="cancelled-icon">
                                         <i class="fas fa-times-circle"></i>
                                     </div>
                                     <h5 class="text-danger mb-2">Pesanan Dibatalkan</h5>
-                                    <p class="text-muted mb-0">Pesanan ini telah dibatalkan dan tidak dapat diproses lebih lanjut.</p>
+                                    <p class="text-muted mb-0">Pesanan ini telah dibatalkan dan tidak dapat diproses lebih
+                                        lanjut.</p>
+                                    @if (isset($order->status_pembayaran) && $order->status_pembayaran == 'F')
+                                        <div class="alert alert-warning mt-3" role="alert">
+                                            <strong>Alasan Pembatalan:</strong>
+                                            <br>
+                                            {{ $order->pembayaran_keterangan ?? '-' }}
+                                        </div>
+                                    @endif
                                 </div>
                             @else
                                 <div class="stepper-wrapper">
@@ -698,25 +709,27 @@
     <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="orderDetailsModalLabel">
+            <div class="modal-content" style="background: #fff; color: var(--pakistan-green);">
+                <div class="modal-header"
+                    style="background: #fff; color: var(--pakistan-green); border-bottom: 1px solid #e8ebe8;">
+                    <h5 class="modal-title1" id="orderDetailsModalLabel" style="color: var(--pakistan-green);">
                         <i class="fas fa-receipt me-2"></i>Detail Pesanan
                         <span class="badge bg-light text-dark ms-2" id="modal-order-id"></span>
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                    <h6 class="text-muted small text-uppercase fw-bold mb-3">
+                <div class="modal-body" style="background: #fff; color: var(--pakistan-green);">
+                    <h6 class="small text-uppercase fw-bold mb-3 text-start" style="color: var(--pakistan-green);">
                         <i class="fas fa-list me-2"></i>Daftar Produk
                     </h6>
                     <div id="modal-order-items" class="list-group">
                         <!-- Items will be populated by JavaScript -->
                     </div>
                 </div>
-                <div class="modal-footer d-flex justify-content-between align-items-center">
+                <div class="modal-footer d-flex justify-content-between align-items-center"
+                    style="background: #fff; color: var(--pakistan-green); border-top: 1px solid #e8ebe8;">
                     <div>
-                        <span class="text-muted">Total Pembayaran:</span>
+                        <span style="color: var(--pakistan-green);">Total Pembayaran:</span>
                         <strong class="fs-5 ms-2" style="color: var(--pakistan-green);" id="modal-order-total"></strong>
                     </div>
                     <a href="#" id="modal-invoice-btn" class="btn-primary-custom" target="_blank">
@@ -766,8 +779,8 @@
                             <img src="${item.image_url}" alt="${item.nama_barang}" 
                                  class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid var(--beige);">
                             <div class="flex-grow-1">
-                                <h6 class="fw-bold mb-1" style="color: var(--pakistan-green);">${item.nama_barang}</h6>
-                                <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-1 text-start" style="color: var(--pakistan-green);">${item.nama_barang}</h6>
+                                <div class="d-flex justify-content-between align-items-center text-start">
                                     <small class="text-muted">Qty: ${item.qty}</small>
                                     <span class="fw-bold" style="color: var(--pakistan-green);">
                                         Rp ${new Intl.NumberFormat('id-ID').format(item.harga)}

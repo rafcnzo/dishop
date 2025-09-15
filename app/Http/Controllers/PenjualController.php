@@ -30,6 +30,14 @@ class PenjualController extends Controller
                 ->sum('total'),
         ];
 
+        $stok_rendah = DB::table('products')
+            ->where('stok', '<', 2)
+            ->select('id', 'nama_produk', 'stok')
+            ->orderBy('stok', 'asc')
+            ->get();
+
+        $data['stok_rendah'] = $stok_rendah;
+
         return view('penjual.index', $data);
     }
 
@@ -136,29 +144,37 @@ class PenjualController extends Controller
             $query->where('transaksi.keterangan', $request->status);
         }
 
-        // Fix: Make sure DataTables ordering uses the correct column name
         return DataTables::of($query)
             ->addIndexColumn()
             ->editColumn('waktu_transaksi', function ($row) {
-                return Carbon::parse($row->waktu_transaksi)->format('d/m/Y H:i');
+                return \Carbon\Carbon::parse($row->waktu_transaksi)->format('d/m/Y H:i');
             })
-            ->editColumn('pelanggan', function ($row) {
+            ->addColumn('pelanggan', function ($row) {
                 return $row->nama_pelanggan ? $row->nama_pelanggan : 'Guest';
             })
-            ->editColumn('total_formatted', function ($row) {
+            ->addColumn('total_formatted', function ($row) {
                 return 'Rp ' . number_format($row->total, 0, ',', '.');
             })
-            ->editColumn('status_badge', function ($row) {
-                $badgeClass = match ($row->keterangan) {
-                    'selesai'    => 'badge bg-success',
-                    'pending'    => 'badge bg-warning',
-                    'dibatalkan' => 'badge bg-danger',
-                    default      => 'badge bg-secondary'
-                };
+            ->addColumn('status_badge', function ($row) {
+                $badgeClass = '';
+                switch ($row->keterangan) {
+                    case 'selesai':
+                        $badgeClass = 'badge bg-success';
+                        break;
+                    case 'pending':
+                        $badgeClass = 'badge bg-warning';
+                        break;
+                    case 'dibatalkan':
+                        $badgeClass = 'badge bg-danger';
+                        break;
+                    default:
+                        $badgeClass = 'badge bg-secondary';
+                        break;
+                }
                 return '<span class="' . $badgeClass . '">' . ucfirst($row->keterangan) . '</span>';
             })
-            ->editColumn('metode_bayar', function ($row) {
-                return ucfirst(str_replace('_', ' ', $row->metode_bayar));
+            ->addColumn('metode_bayar', function ($row) {
+                return $row->metode_bayar ? ucfirst(str_replace('_', ' ', $row->metode_bayar)) : '-';
             })
             ->addColumn('action', function ($row) {
                 return '
@@ -173,7 +189,6 @@ class PenjualController extends Controller
                 ';
             })
             ->rawColumns(['status_badge', 'action'])
-        // Explicitly set the order columns to match the actual DB columns
             ->orderColumn('waktu_transaksi', 'transaksi.waktu_transaksi $1')
             ->make(true);
     }
@@ -183,7 +198,6 @@ class PenjualController extends Controller
         $startDate = $request->tanggal_mulai ?? now()->startOfMonth()->format('Y-m-d');
         $endDate   = $request->tanggal_selesai ?? now()->format('Y-m-d');
 
-        // Ambil total penjualan per hari (jumlah transaksi * total per transaksi)
         $data = DB::table('transaksi')
             ->selectRaw('DATE(waktu_transaksi) as tanggal, SUM(total) as total_penjualan')
             ->where('pelanggan_id', auth()->id())
@@ -193,7 +207,6 @@ class PenjualController extends Controller
             ->orderBy('tanggal')
             ->pluck('total_penjualan', 'tanggal');
 
-        // Buat periode tanggal harian
         $period    = [];
         $labels    = [];
         $chartData = [];
@@ -233,15 +246,12 @@ class PenjualController extends Controller
             $query->whereBetween('waktu_transaksi', [$tanggalMulai, $tanggalSelesai]);
         }
 
-        // Ambil status dan total, lalu normalisasi ke lowercase dan trim untuk pencocokan tidak case sensitive
         $statusCountsRaw = $query->select('keterangan', DB::raw('count(*) as total'))
             ->groupBy('keterangan')
             ->get();
 
-        // Buat array mapping status yang sudah dinormalisasi
         $statusCounts = [];
         foreach ($statusCountsRaw as $row) {
-            // Normalisasi: lowercase dan trim spasi
             $key                = strtolower(trim($row->keterangan));
             $statusCounts[$key] = $row->total;
         }
@@ -259,7 +269,6 @@ class PenjualController extends Controller
 
     public function produkTerlaris(Request $request)
     {
-        // Query produk terlaris sesuai instruksi prompt
         $query = DB::table('transaksi_detail as td')
             ->join('transaksi as t', 'td.transaksi_id', '=', 't.id')
             ->join('products as p', 'td.barang_id', '=', 'p.id')
@@ -274,12 +283,10 @@ class PenjualController extends Controller
                 'p.harga as harga_satuan'
             );
 
-        // Filter keterangan jika ada di request, jika tidak ada, jangan filter
         if ($request->filled('status')) {
             $query->where('t.keterangan', $request->status);
         }
 
-        // Filter tanggal jika ada
         if ($request->filled('tanggal_mulai') && $request->filled('tanggal_selesai')) {
             $tanggalMulai   = $request->tanggal_mulai . ' 00:00:00';
             $tanggalSelesai = $request->tanggal_selesai . ' 23:59:59';
@@ -383,7 +390,6 @@ class PenjualController extends Controller
                 ];
             }
 
-            // Gunakan Laravel Excel versi 3.x ke atas (Maatwebsite\Excel\Facades\Excel)
             return \Maatwebsite\Excel\Facades\Excel::download(new class($data, $headings) implements \Maatwebsite\Excel\Concerns\FromArray, \Maatwebsite\Excel\Concerns\WithHeadings, \Maatwebsite\Excel\Concerns\WithTitle, \Maatwebsite\Excel\Concerns\WithEvents
             {
                 private $data;
@@ -414,7 +420,6 @@ class PenjualController extends Controller
                 {
                     return [
                         \Maatwebsite\Excel\Events\AfterSheet::class => function (\Maatwebsite\Excel\Events\AfterSheet $event) {
-                            // Membuat baris heading menjadi bold
                             $cellRange = 'A1:K1';
                             $event->sheet->getDelegate()->getStyle($cellRange)->getFont()->setBold(true);
                         },
@@ -554,21 +559,18 @@ class PenjualController extends Controller
         $startDate = now()->startOfMonth();
         $endDate   = now();
 
-        // Penjualan hari ini
         $penjualanHariIni = DB::table('transaksi')
             ->where('pelanggan_id', auth()->id())
             ->where('keterangan', 'selesai')
             ->whereDate('waktu_transaksi', now()->toDateString())
             ->sum('total');
 
-        // Penjualan bulan ini
         $penjualanBulanIni = DB::table('transaksi')
             ->where('pelanggan_id', auth()->id())
             ->where('keterangan', 'selesai')
             ->whereBetween('waktu_transaksi', [$startDate, $endDate])
             ->sum('total');
 
-        // Penjualan bulan lalu
         $penjualanBulanLalu = DB::table('transaksi')
             ->where('pelanggan_id', auth()->id())
             ->where('keterangan', 'selesai')
@@ -578,13 +580,11 @@ class PenjualController extends Controller
             ])
             ->sum('total');
 
-        // Persentase pertumbuhan
         $growthPercentage = 0;
         if ($penjualanBulanLalu > 0) {
             $growthPercentage = (($penjualanBulanIni - $penjualanBulanLalu) / $penjualanBulanLalu) * 100;
         }
 
-        // Top produk bulan ini
         $topProduk = DB::table('transaksi_detail')
             ->join('transaksi', 'transaksi_detail.transaksi_id', '=', 'transaksi.id')
             ->join('products', 'transaksi_detail.barang_id', '=', 'products.id')

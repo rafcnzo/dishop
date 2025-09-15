@@ -48,9 +48,11 @@
                 <div class="menu-title">Transaksi Penjualan</div>
             </a>
             <ul>
-                <li> <a href="{{ route('transaksi.konfirmasi') }}"><i class="bx bx-right-arrow-alt"></i>Konfirmasi Pembayaran</a>
+                <li> <a href="{{ route('transaksi.konfirmasi') }}"><i class="bx bx-right-arrow-alt"></i>Konfirmasi
+                        Pembayaran</a>
                 </li>
-                <li> <a href="{{ route('transaksi.riwayat') }}"><i class="bx bx-right-arrow-alt"></i>Riwayat Transaksi</a>
+                <li> <a href="{{ route('transaksi.riwayat') }}"><i class="bx bx-right-arrow-alt"></i>Riwayat
+                        Transaksi</a>
                 </li>
             </ul>
         </li>

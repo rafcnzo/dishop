@@ -14,10 +14,6 @@ class OrderController extends Controller
     {
         $cart = Session::get('cart');
         if (! $cart || count($cart) == 0) {
-            \Log::warning('Keranjang kosong saat mencoba placeOrder', [
-                'user_id' => Auth::id(),
-                'ip'      => $request->ip(),
-            ]);
             return redirect('/')->with('error', 'Keranjang Anda kosong.');
         }
 
@@ -52,23 +48,10 @@ class OrderController extends Controller
 
             DB::commit();
 
-            \Log::info('Pesanan berhasil dibuat', [
-                'user_id'  => Auth::id(),
-                'order_id' => $newOrderId,
-                'total'    => $totalHarga,
-                'ip'       => $request->ip(),
-            ]);
-
             return redirect()->route('payment.confirmation', ['order' => $newOrderId]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Gagal membuat pesanan', [
-                'user_id' => Auth::id(),
-                'error'   => $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),
-                'ip'      => $request->ip(),
-            ]);
             $notification = [
                 'type'    => 'error',
                 'title'   => 'Gagal!',
@@ -78,7 +61,6 @@ class OrderController extends Controller
         }
     }
 
-    // Fungsi untuk membatalkan pesanan
     public function cancelOrder($id)
     {
         $userId = Auth::id();
@@ -90,7 +72,6 @@ class OrderController extends Controller
                 ->first();
 
             if (! $order) {
-                // Kirim JSON error jika pesanan tidak ditemukan
                 return response()->json([
                     'success' => false,
                     'message' => 'Pesanan tidak ditemukan.',
@@ -126,7 +107,7 @@ class OrderController extends Controller
     {
         $order = DB::table('transaksi')
             ->where('id', $orderId)
-            ->where('pelanggan_id', Auth::id()) // Keamanan: pastikan pesanan milik user
+            ->where('pelanggan_id', Auth::id())
             ->first();
 
         if (! $order) {
@@ -141,7 +122,6 @@ class OrderController extends Controller
                 'title'   => 'Info Pesanan',
                 'message' => 'Pesanan ini tidak lagi menunggu pembayaran. Status saat ini: ' . ucfirst($order->keterangan),
             ];
-            // Arahkan ke halaman daftar pesanan dengan notifikasi
             return redirect()->route('orders')->with('notification', $notification);
         }
 
@@ -162,7 +142,8 @@ class OrderController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'order_id'      => 'required|exists:transaksi,id',
-            'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120', // maks 5MB
+            'payment_proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120', // Maksimal 5MB
+            'keterangan'    => 'nullable|string|max:255',
         ]);
 
         if ($validator->fails()) {
@@ -173,22 +154,22 @@ class OrderController extends Controller
         $order   = DB::table('transaksi')->where('id', $orderId)->where('pelanggan_id', Auth::id())->first();
 
         if (! $order) {
-            abort(404);
+            abort(404, 'Pesanan tidak ditemukan.');
         }
 
-        $filePath = null;
+        $fileName = null;
         if ($request->hasFile('payment_proof')) {
             $file     = $request->file('payment_proof');
             $fileName = 'proof_' . $orderId . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $filePath = $file->storeAs('public/proofs', $fileName); // Simpan di storage/app/public/proofs
+            $file->storeAs('public/proofs', $fileName);
         }
 
         DB::table('pembayaran')->insert([
             'transaksi_id'   => $orderId,
             'bukti_transfer' => $fileName,
-            'metode'         => $order->metode_pembayaran ?? 'Bank Transfer', // Ambil dari transaksi jika ada
+            'metode'         => $order->metode_pembayaran ?? 'Bank Transfer',
             'waktu'          => Carbon::now(),
-            'keterangan'     => $request->input('notes'),
+            'keterangan'     => $request->input('keterangan'),
         ]);
 
         DB::table('transaksi')->where('id', $orderId)->update([

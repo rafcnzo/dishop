@@ -9,10 +9,8 @@ class CartController extends Controller
 {
     public function addToCart($productId)
     {
-        // Ambil data produk
         $product = DB::table('products')->where('id', $productId)->first();
 
-        // Cek apakah produk ada
         if (! $product) {
             return response()->json([
                 'success' => false,
@@ -20,7 +18,6 @@ class CartController extends Controller
             ], 404);
         }
 
-        // Cek stok produk
         if ($product->stok < 1) {
             return response()->json([
                 'success' => false,
@@ -30,7 +27,6 @@ class CartController extends Controller
 
         $cart = Session::get('cart', []);
 
-        // Jika produk sudah ada di keranjang, tambahkan qty 1, tapi cek stok
         if (isset($cart[$productId])) {
             if ($cart[$productId]['qty'] + 1 > $product->stok) {
                 return response()->json([
@@ -61,7 +57,7 @@ class CartController extends Controller
     {
         $cart     = Session::get('cart', []);
         $quantity = $request->input('quantity');
-        $product = DB::table('products')->where('id', $productId)->first();
+        $product  = DB::table('products')->where('id', $productId)->first();
 
         if (! $product) {
             return response()->json([
@@ -74,7 +70,7 @@ class CartController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Stok tidak mencukupi! Hanya tersisa ' . $product->stok,
-            ], 422); // 422 Unprocessable Entity
+            ], 422);
         }
         $quantity = $request->input('quantity');
 
@@ -92,12 +88,10 @@ class CartController extends Controller
     {
         $cart = Session::get('cart', []);
 
-        // Cek apakah produk ada di keranjang, lalu hapus
         if (isset($cart[$productId])) {
             unset($cart[$productId]);
             Session::put('cart', $cart);
 
-            // Kirim kembali data keranjang yang sudah diperbarui
             return $this->getCartDataForResponse();
         }
 

@@ -676,7 +676,7 @@
 
             <div class="col-lg-5">
                 <div class="confirmation-card card-full-height">
-                    <div class="card-body d-flex flex-column"> {{-- Tambahkan d-flex flex-column di sini --}}
+                    <div class="card-body d-flex flex-column">
                         <h3><i class="fas fa-upload"></i> Unggah Bukti Pembayaran</h3>
 
                         <form id="confirmationForm" action="{{ route('payment.confirm') }}" method="POST"
@@ -713,7 +713,14 @@
                                 </div>
                             </div>
 
-                            <div class="d-grid gap-2 mt-auto"> {{-- mt-auto akan mendorong tombol ke bawah --}}
+                            {{-- Tambahkan catatan opsional --}}
+                            <div class="mb-3 mt-3">
+                                <label for="keterangan" class="form-label">Catatan (Opsional)</label>
+                                <textarea class="form-control" name="keterangan" id="keterangan" rows="2"
+                                    placeholder="Tulis catatan tambahan jika diperlukan..."></textarea>
+                            </div>
+
+                            <div class="d-grid gap-2 mt-auto">
                                 <button type="submit" class="btn btn-primary-custom btn-lg" id="submitBtn" disabled>
                                     <i class="fas fa-check me-2"></i>Konfirmasi Pembayaran
                                 </button>
@@ -763,7 +770,7 @@
 
                         showNotification('warning', 'Waktu Habis',
                             'Waktu pembayaran untuk pesanan ini telah berakhir. Halaman akan dimuat ulang.'
-                            );
+                        );
 
                         setTimeout(function() {
                             window.location.reload();
@@ -952,59 +959,71 @@
                                 // Ganti submit form dengan AJAX
                                 const formData = new FormData(paymentForm);
                                 submitBtn.disabled = true;
-                                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
+                                submitBtn.innerHTML =
+                                    '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
 
                                 fetch(paymentForm.action, {
-                                    method: 'POST',
-                                    body: formData,
-                                    headers: {
-                                        'Accept': 'application/json',
-                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                    }
-                                })
-                                .then(async response => {
-                                    submitBtn.disabled = false;
-                                    submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>Konfirmasi Pembayaran';
+                                        method: 'POST',
+                                        body: formData,
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        }
+                                    })
+                                    .then(async response => {
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML =
+                                            '<i class="fas fa-check me-2"></i>Konfirmasi Pembayaran';
 
-                                    if (response.redirected) {
-                                        // Jika redirect, kemungkinan sukses
-                                        showNotification('success', 'Berhasil', 'Konfirmasi pembayaran Anda telah diterima. Anda akan diarahkan ke halaman pesanan.');
-                                        setTimeout(() => {
-                                            window.location.href = response.url;
-                                        }, 2000);
-                                        return;
-                                    }
+                                        if (response.redirected) {
+                                            // Jika redirect, kemungkinan sukses
+                                            showNotification('success', 'Berhasil',
+                                                'Konfirmasi pembayaran Anda telah diterima. Anda akan diarahkan ke halaman pesanan.'
+                                                );
+                                            setTimeout(() => {
+                                                window.location.href = response.url;
+                                            }, 2000);
+                                            return;
+                                        }
 
-                                    let data;
-                                    try {
-                                        data = await response.json();
-                                    } catch (e) {
-                                        const text = await response.text();
-                                        showNotification('error', 'Gagal', 'Terjadi kesalahan: ' + text);
-                                        return;
-                                    }
+                                        let data;
+                                        try {
+                                            data = await response.json();
+                                        } catch (e) {
+                                            const text = await response.text();
+                                            showNotification('error', 'Gagal',
+                                                'Terjadi kesalahan: ' + text);
+                                            return;
+                                        }
 
-                                    if (data && data.errors) {
-                                        // Tampilkan error validasi
-                                        let pesan = '';
-                                        Object.values(data.errors).forEach(function(msgArr) {
-                                            pesan += msgArr.join('<br>');
-                                        });
-                                        showNotification('error', 'Validasi Gagal', pesan);
-                                    } else if (data && data.success) {
-                                        showNotification('success', 'Berhasil', 'Konfirmasi pembayaran Anda telah diterima. Anda akan diarahkan ke halaman pesanan.');
-                                        setTimeout(() => {
-                                            window.location.href = '{{ route('orders') }}';
-                                        }, 2000);
-                                    } else {
-                                        showNotification('error', 'Gagal', data.message || 'Terjadi kesalahan.');
-                                    }
-                                })
-                                .catch(error => {
-                                    submitBtn.disabled = false;
-                                    submitBtn.innerHTML = '<i class="fas fa-check me-2"></i>Konfirmasi Pembayaran';
-                                    showNotification('error', 'Error', 'Terjadi kesalahan: ' + error.message);
-                                });
+                                        if (data && data.errors) {
+                                            // Tampilkan error validasi
+                                            let pesan = '';
+                                            Object.values(data.errors).forEach(function(
+                                            msgArr) {
+                                                pesan += msgArr.join('<br>');
+                                            });
+                                            showNotification('error', 'Validasi Gagal', pesan);
+                                        } else if (data && data.success) {
+                                            showNotification('success', 'Berhasil',
+                                                'Konfirmasi pembayaran Anda telah diterima. Anda akan diarahkan ke halaman pesanan.'
+                                                );
+                                            setTimeout(() => {
+                                                window.location.href =
+                                                    '{{ route('orders') }}';
+                                            }, 2000);
+                                        } else {
+                                            showNotification('error', 'Gagal', data.message ||
+                                                'Terjadi kesalahan.');
+                                        }
+                                    })
+                                    .catch(error => {
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML =
+                                            '<i class="fas fa-check me-2"></i>Konfirmasi Pembayaran';
+                                        showNotification('error', 'Error', 'Terjadi kesalahan: ' +
+                                            error.message);
+                                    });
                             }
                         }
                     );

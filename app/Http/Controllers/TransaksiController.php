@@ -18,6 +18,7 @@ class TransaksiController extends Controller
                     'transaksi.waktu_transaksi',
                     'users.username as pelanggan',
                     'transaksi.total',
+                    'transaksi.keterangan',
                     'pembayaran.status_pembayaran'
                 )
                 ->orderByRaw("CASE WHEN pembayaran.status_pembayaran IS NULL OR pembayaran.status_pembayaran = '' THEN 0 ELSE 1 END");
@@ -27,6 +28,8 @@ class TransaksiController extends Controller
                 ->addColumn('action', function ($row) {
                     if ($row->status_pembayaran === 'F' || is_null($row->status_pembayaran) || $row->status_pembayaran === '') {
                         return '<button onclick="showDetailModal(' . $row->id . ')" class="btn btn-success btn-sm">Konfirmasi</button>';
+                        // } else if ($row->status_pembayaran === 'T' && $row->keterangan === 'diproses') {
+                        //     return '<button onclick="pesananDikirim(' . $row->id . ')" class="btn btn-primary btn-sm">Pesanan Dikirim</button>';
                     }
                     return '';
                 })
@@ -70,15 +73,21 @@ class TransaksiController extends Controller
                 ->get();
 
             $pembayaran = DB::table('pembayaran')
-                ->select('bukti_transfer', 'status_pembayaran')
+                ->select('bukti_transfer', 'status_pembayaran', 'keterangan')
                 ->where('transaksi_id', $id)
                 ->first();
 
+            $bukti_transfer_url = null;
+            if ($pembayaran && $pembayaran->bukti_transfer) {
+                $bukti_transfer_url = asset('storage/proofs/' . $pembayaran->bukti_transfer);
+            }
+
             return response()->json([
-                'success'      => true,
-                'transaksi'    => $transaksi,
-                'detail_items' => $detail_items,
-                'pembayaran'   => $pembayaran,
+                'success'            => true,
+                'transaksi'          => $transaksi,
+                'detail_items'       => $detail_items,
+                'pembayaran'         => $pembayaran,
+                'bukti_transfer_url' => $bukti_transfer_url,
             ]);
 
         } catch (\Exception $e) {
@@ -92,6 +101,7 @@ class TransaksiController extends Controller
     public function setujuiTransaksi($id, Request $request)
     {
         try {
+            // Update status pembayaran di tabel pembayaran
             $affected = DB::table('pembayaran')
                 ->where('transaksi_id', $id)
                 ->update([
@@ -100,6 +110,13 @@ class TransaksiController extends Controller
                 ]);
 
             if ($affected) {
+                // Update juga kolom keterangan di tabel transaksi menjadi 'diproses'
+                DB::table('transaksi')
+                    ->where('id', $id)
+                    ->update([
+                        'keterangan' => 'selesai',
+                    ]);
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Transaksi berhasil disetujui.',
@@ -131,6 +148,16 @@ class TransaksiController extends Controller
                 ]);
 
             if ($affected) {
+                DB::table('transaksi')
+                    ->where('id', $id)
+                    ->update([
+                        'keterangan' => 'dibatalkan',
+                    ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transaksi berhasil disetujui.',
+                ]);
                 return response()->json([
                     'success' => true,
                     'message' => 'Transaksi berhasil ditolak.',
@@ -184,5 +211,34 @@ class TransaksiController extends Controller
         }
         return view('penjual.transaksi.riwayat');
     }
+
+    // public function pesananDikirim($id, Request $request)
+    // {
+    //     try {
+    //         $affected = DB::table('transaksi')
+    //             ->where('id', $id)
+    //             ->update([
+    //                 'keterangan' => 'diterima',
+    //                 'dtmodi'     => now(),
+    //             ]);
+
+    //         if ($affected) {
+    //             return response()->json([
+    //                 'success' => true,
+    //                 'message' => 'Transaksi berhasil disetujui.',
+    //             ]);
+    //         } else {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Transaksi tidak ditemukan atau sudah diproses.',
+    //             ]);
+    //         }
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+    //         ], 500);
+    //     }
+    // }
 
 }

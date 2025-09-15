@@ -99,18 +99,15 @@ class HomeController extends Controller
 
     public function searchProducts(Request $request)
     {
-        // Hanya proses jika ada query
         if ($request->has('query')) {
             $query = $request->get('query');
 
             $products = DB::table('products')
-                ->where('nama_barang', 'LIKE', "%{$query}%") // Cari berdasarkan nama barang
-                                                         // ->orWhere('deskripsi', 'LIKE', "%{$query}%") // Opsional: cari di deskripsi juga
-                ->select('nama_barang', 'harga', 'image')    // Ambil kolom yang dibutuhkan
-                ->limit(5)                                   // Batasi hasilnya, misal 5 produk
+                ->where('nama_barang', 'LIKE', "%{$query}%")
+                ->select('nama_barang', 'harga', 'image')
+                ->limit(5)
                 ->get();
 
-            // Ubah path gambar menjadi URL lengkap
             $products->transform(function ($item) {
                 $item->image_url = $item->image
                     ? asset('upload/images_produk/' . $item->image)
@@ -121,6 +118,6 @@ class HomeController extends Controller
             return response()->json($products);
         }
 
-        return response()->json([]); // Kembalikan array kosong jika tidak ada query
+        return response()->json([]);
     }
 }

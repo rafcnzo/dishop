@@ -1,14 +1,14 @@
 <?php
 
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PenjualController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TransaksiController;
-use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('index');
@@ -66,13 +66,12 @@ Route::controller(SupplierController::class)->group(function () {
     Route::post('update/supplier', 'UpdateSupplier')->name('update.supplier');
 });
 
-Route::get('/penjual/login', [PenjualController::class, 'LoginPenjual'])->name('penjual.login');
-
 Route::controller(TransaksiController::class)->prefix('transaksi')->group(function () {
     Route::get('konfirmasi', 'konfirmasiTransaksi')->name('transaksi.konfirmasi');
     Route::get('detail/{id}', 'getDetailTransaksi')->name('transaksi.detail');
     Route::post('setujui/{id}', 'setujuiTransaksi')->name('transaksi.setujui');
     Route::post('tolak/{id}', 'tolakTransaksi')->name('transaksi.tolak');
+    Route::post('dikirim/{id}', 'pesananDikirim')->name('transaksi.kirim');
     Route::get('riwayat', 'riwayatTransaksi')->name('transaksi.riwayat');
 
 });
@@ -107,7 +106,7 @@ Route::middleware(['auth', 'role:pembeli'])->group(function () {
     Route::post('/submit-konfirmasi', [OrderController::class, 'submitConfirmation'])->name('payment.confirm');
     Route::post('/order/cancel/{id}', [OrderController::class, 'cancelOrder'])->name('order.cancel');
 
-    Route::get('/myorders',[App\Http\Controllers\CustomerController::class, 'indexOrders'])->name('orders');
-    Route::get('/myorders/{id}',[App\Http\Controllers\CustomerController::class, 'showOrder'])->name('orders.show');
-    Route::get('/invoice/{id}',[App\Http\Controllers\CustomerController::class, 'showInvoice'])->name('invoice.show');
+    Route::get('/myorders', [App\Http\Controllers\CustomerController::class, 'indexOrders'])->name('orders');
+    Route::get('/myorders/{id}', [App\Http\Controllers\CustomerController::class, 'showOrder'])->name('orders.show');
+    Route::get('/invoice/{id}', [App\Http\Controllers\CustomerController::class, 'showInvoice'])->name('invoice.show');
 });

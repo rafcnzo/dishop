@@ -52,7 +52,8 @@
                     <div class="mb-3">
                         <strong>Pelanggan:</strong> <span id="detailPelanggan"></span><br>
                         <strong>Waktu Transaksi:</strong> <span id="detailWaktu"></span><br>
-                        <strong>Total:</strong> <span id="detailTotal"></span>
+                        <strong>Total:</strong> <span id="detailTotal"></span><br> <strong>Keterangan:</strong> <span
+                            id="detailKeterangan"></span>
                     </div>
                     <div class="table-responsive">
                         <table id="tbl-detail-barang" class="table table-bordered table-striped" style="width:100%">
@@ -154,7 +155,7 @@
 
         function showDetailModal(transaksiId) {
             $('#btnTolakTransaksi, #btnSetujuiTransaksi').data('transaksi-id', transaksiId);
-            $('#detailPelanggan, #detailWaktu, #detailTotal').text('');
+            $('#detailPelanggan, #detailWaktu, #detailKeterangan').text('');
             $('#tbl-detail-barang tbody').empty();
             $('#buktiTransaksiContainer').hide().empty();
 
@@ -178,6 +179,8 @@
                             currency: 'IDR'
                         }).format(trx.total);
                         $('#detailTotal').text(totalFormatted);
+                        $('#detailKeterangan').text(pembayaran && pembayaran.keterangan ? pembayaran
+                            .keterangan : '-');
 
                         const detailTableBody = $('#tbl-detail-barang tbody');
                         detailTableBody.empty();
@@ -193,10 +196,9 @@
                             detailTableBody.append(row);
                         });
 
-                        if (pembayaran) {
-                            const buktiUrl =
-                                `{{ asset('storage/bukti_pembayaran') }}/${pembayaran.bukti_pembayaran}`;
-                            $('#btnLihatBukti').show().data('bukti-url', buktiUrl);
+                        // Penyesuaian bagian bukti pembayaran
+                        if (data.bukti_transfer_url) {
+                            $('#btnLihatBukti').show().data('bukti-url', data.bukti_transfer_url);
                         } else {
                             $('#btnLihatBukti').hide();
                         }
@@ -210,6 +212,44 @@
                 }
             });
         }
+
+        // function pesananDikirim(transaksiId) {
+        //     Swal.fire({
+        //         title: 'Konfirmasi',
+        //         text: 'Apakah Anda yakin ingin mengubah status pesanan menjadi "Dikirim"?',
+        //         icon: 'question',
+        //         showCancelButton: true,
+        //         confirmButtonText: 'Ya, Kirim',
+        //         cancelButtonText: 'Batal'
+        //     }).then((result) => {
+        //         if (result.isConfirmed) {
+        //             $.ajax({
+        //                 url: `/transaksi/dikirim/${transaksiId}`,
+        //                 type: 'POST',
+        //                 data: {
+        //                     _token: '{{ csrf_token() }}'
+        //                 },
+        //                 beforeSend: function() {
+        //                     showLoading();
+        //                 },
+        //                 success: function(res) {
+        //                     hideLoading();
+        //                     if (res.success) {
+        //                         Swal.fire('Berhasil', 'Status pesanan berhasil diubah menjadi dikirim.',
+        //                             'success');
+        //                         $('#tbl-konfirmasi').DataTable().ajax.reload();
+        //                     } else {
+        //                         Swal.fire('Gagal', res.message || 'Terjadi kesalahan.', 'error');
+        //                     }
+        //                 },
+        //                 error: function(jqXHR, textStatus, errorThrown) {
+        //                     hideLoading();
+        //                     Swal.fire('Gagal', 'Terjadi kesalahan saat mengirim permintaan.', 'error');
+        //                 }
+        //             });
+        //         }
+        //     });
+        // }
 
         function tampilkanBuktiPembayaran() {
             const url = $('#btnLihatBukti').data('bukti-url');

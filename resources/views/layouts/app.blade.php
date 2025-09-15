@@ -119,6 +119,18 @@
             box-shadow: 0 15px 35px rgba(20, 49, 9, 0.2);
         }
 
+        @media (max-width: 991.98px) {
+            .hero-cards-container {
+                display: none !important;
+            }
+
+            .hero-section {
+                min-height: 65vh;
+                /* Geser sedikit ke atas */
+                padding-top: 2rem;
+            }
+        }
+
         .promotion-section {
             background: var(--beige);
             padding: 4rem 0;
@@ -143,32 +155,40 @@
             transform: scale(1.1) rotate(5deg);
         }
 
+        /* Search Results Container */
         #search-results-container {
-            z-index: 1050;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 0 0 .275rem .275rem;
-            overflow: hidden;
-        }
-
-        .search-result-item {
-            padding: 0.75rem 1rem;
-        }
-
-        .search-result-img {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            border-radius: .25rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin-top: 0.25rem;
+            max-height: 400px;
+            /* Sedikit lebih tinggi */
+            overflow-y: auto;
         }
 
         .search-no-result {
             padding: 1rem;
-            background-color: #fff;
+            text-align: center;
             color: #6c757d;
-            border: 1px solid #dee2e6;
-            border-top: none;
-            border-radius: 0 0 .375rem .375rem;
         }
+
+        .list-group-item {
+            border-left: none;
+            border-right: none;
+        }
+
+        .list-group-item:first-child {
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            border-top: none;
+        }
+
+        .list-group-item:last-child {
+            border-bottom-left-radius: 10px;
+            border-bottom-right-radius: 10px;
+            border-bottom: none;
+        }
+
         /* Modal backdrop dengan kontras tinggi
         .modal-backdrop.show {
             background: linear-gradient(135deg, rgba(20, 49, 9, 0.95), rgba(255, 255, 0, 0.5));
@@ -270,6 +290,7 @@
             color: #181a20;
             box-shadow: 0 16px 32px rgba(34, 197, 94, 0.3);
         }
+
         .modal-icon-success::before {
             background: #22c55e;
         }
@@ -280,6 +301,7 @@
             color: #181a20;
             box-shadow: 0 16px 32px rgba(239, 68, 68, 0.3);
         }
+
         .modal-icon-danger::before {
             background: #ef4444;
         }
@@ -290,6 +312,7 @@
             color: #23272f;
             box-shadow: 0 16px 32px rgba(255, 224, 102, 0.5);
         }
+
         .modal-icon-warning::before {
             background: #ffe066;
         }
@@ -300,6 +323,7 @@
             color: #181a20;
             box-shadow: 0 16px 32px rgba(56, 189, 248, 0.3);
         }
+
         .modal-icon-info::before {
             background: #38bdf8;
         }
@@ -406,7 +430,8 @@
             border-color: var(--sage);
             transform: translateY(-3px);
             color: #23272f;
-            box-shadow: 0 12px 32px rgba(170, 174, 127, 0.25); /* rgba dari --sage */
+            box-shadow: 0 12px 32px rgba(170, 174, 127, 0.25);
+            /* rgba dari --sage */
         }
 
         @keyframes ripple {
@@ -414,10 +439,12 @@
                 transform: scale(1);
                 opacity: 0.25;
             }
+
             50% {
                 transform: scale(1.3);
                 opacity: 0.08;
             }
+
             100% {
                 transform: scale(1);
                 opacity: 0.25;
@@ -429,6 +456,7 @@
                 opacity: 0;
                 transform: scale(0.85) translateY(20px);
             }
+
             100% {
                 opacity: 1;
                 transform: scale(1) translateY(0);
@@ -440,6 +468,7 @@
                 opacity: 0;
                 transform: translateY(-30px);
             }
+
             100% {
                 opacity: 1;
                 transform: translateY(0);
@@ -537,6 +566,7 @@
             0% {
                 transform: rotate(0deg);
             }
+
             100% {
                 transform: rotate(360deg);
             }
@@ -573,7 +603,6 @@
 
     <!-- Custom JS -->
     <script>
-        // Initialize animations on scroll
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
@@ -599,19 +628,18 @@
                 "closeButton": false,
                 "progressBar": true,
                 "positionClass": "toast-top-left",
-                "timeOut": "2100", // 3 detik
+                "timeOut": "2100",
             };
 
             function updateCartView(response) {
                 let offcanvasBody = $('#cart-items-container');
                 let cartTotalElement = $('#cart-total');
                 let cartBadge = $('#cart-count-badge');
-                let checkoutBtn = $('#checkout-btn'); // Target tombol checkout kita
+                let checkoutBtn = $('#checkout-btn');
 
                 offcanvasBody.empty();
 
                 if (response.cartItems && Object.keys(response.cartItems).length > 0) {
-                    // Bagian ini mengisi item ke keranjang (tidak berubah)
                     $.each(response.cartItems, function(id, item) {
                         let priceFormatted = new Intl.NumberFormat('id-ID', {
                             style: 'currency',
@@ -655,27 +683,20 @@
                     }).format(response.cartTotal);
                     cartTotalElement.text(totalFormatted);
 
-                    // --- INI PERUBAHAN LOGIKANYA ---
-                    // Jika ada barang, aktifkan tombol checkout
                     checkoutBtn.prop('disabled', false);
 
                 } else {
-                    // Jika keranjang kosong
                     offcanvasBody.html('<p class="text-center text-muted mt-5">Keranjang Anda masih kosong.</p>');
                     cartTotalElement.text('Rp 0');
 
-                    // --- INI PERUBAHAN LOGIKANYA ---
-                    // Jika kosong, non-aktifkan tombol checkout
                     checkoutBtn.prop('disabled', true);
                 }
 
-                // Update badge jumlah item di navbar (tidak berubah)
                 if (cartBadge.length) {
                     cartBadge.text(response.cartCount > 0 ? response.cartCount : '');
                 }
             }
 
-            // --- FUNGSI UNTUK MENGIRIM REQUEST AJAX KERANJANG ---
             function sendCartRequest(url, method, data = {}) {
                 $.ajax({
                     url: url,
@@ -691,13 +712,11 @@
                         }
                     },
                     error: function() {
-                        // GANTI alert DENGAN toastr.error
                         toastr.error('Terjadi kesalahan. Silakan coba lagi.');
                     }
                 });
             }
 
-            // --- EVENT LISTENERS UNTUK KERANJANG ---
             $('#cart-toggle-btn').on('click', function() {
                 sendCartRequest('{{ route('cart.items') }}', 'GET');
             });
@@ -728,17 +747,17 @@
                 // Ambil ID produk dari tombol yang di-klik
                 let productId = $(this).data('product-id');
 
-                // Panggil fungsi modal konfirmasi Anda
+
                 showConfirmation(
-                    'danger', // Tipe modal (merah untuk bahaya)
-                    'Hapus Produk?', // Judul modal
-                    'Anda yakin ingin menghapus produk ini dari keranjang?', // Pesan konfirmasi
-                    'Ya, Hapus', // Teks untuk tombol konfirmasi
-                    'Batal', // Teks untuk tombol batal
-                    function() { // Ini adalah callback function
+                    'danger',
+                    'Hapus Produk?',
+                    'Anda yakin ingin menghapus produk ini dari keranjang?',
+                    'Ya, Hapus',
+                    'Batal',
+                    function() {
                         sendCartRequest(`/cart/remove/${productId}`, 'POST');
                         toastr.info(
-                            'Produk telah dihapus dari keranjang.'); // Tips: Beri feedback tambahan
+                            'Produk telah dihapus dari keranjang.');
                     }
                 );
             });
@@ -746,15 +765,17 @@
             $(document).on('click', '.btn-cancel-order', function() {
                 let productId = $(this).data('product-id');
 
-                // Panggil fungsi modal konfirmasi Anda
+
                 showConfirmation(
-                    'danger', // Tipe modal (merah untuk bahaya)
-                    'Batalkan Pesanan?', // Judul modal
-                    'Anda yakin ingin membatalkan pesanan ini?', // Pesan konfirmasi
-                    'Ya, Batalkan', // Teks untuk tombol konfirmasi
-                    'Batal', // Teks untuk tombol batal
-                    function() { // Ini adalah callback function
-                        $.post(`/order/cancel/${productId}`, {_token: '{{ csrf_token() }}'}, function(response) {
+                    'danger',
+                    'Batalkan Pesanan?',
+                    'Anda yakin ingin membatalkan pesanan ini?',
+                    'Ya, Batalkan',
+                    'Batal',
+                    function() {
+                        $.post(`/order/cancel/${productId}`, {
+                            _token: '{{ csrf_token() }}'
+                        }, function(response) {
                             toastr.info('Pesanan berhasil dibatalkan.');
                             location.reload();
                         }).fail(function(xhr) {
@@ -763,11 +784,6 @@
                     }
                 );
             });
-
-
-            // =================================================================
-            // BAGIAN PENCARIAN PRODUK (SEARCH)
-            // =================================================================
 
             function debounce(func, delay) {
                 let timeout;
@@ -799,14 +815,25 @@
                                             currency: 'IDR',
                                             minimumFractionDigits: 0
                                         }).format(product.harga);
+                                    let actionButton = IS_LOGGED_IN ?
+                                        `<button class="btn btn-sm btn-primary add-to-cart-btn" data-product-id="${product.id}">
+                                            <i class="fas fa-cart-plus"></i>
+                                        </button>` :
+                                        `<a href="${LOGIN_URL}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-cart-plus"></i>
+                                        </a>`;
+
                                     let listItem = `
-                                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center search-result-item">
-                                    <img src="${product.image_url}" class="me-3 search-result-img" alt="${product.nama_barang}">
-                                    <div>
-                                        <div class="fw-bold">${product.nama_barang}</div>
-                                        <small>${priceFormatted}</small>
-                                    </div>
-                                </a>`;
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        <a href="/product/${product.slug}" class="text-decoration-none text-dark d-flex align-items-center">
+                                            <img src="${product.image_url}" width="50" class="rounded me-3" alt="${product.nama_barang}">
+                                            <div>
+                                                <div class="fw-bold">${product.nama_barang}</div>
+                                                <small>${priceFormatted}</small>
+                                            </div>
+                                        </a>
+                                        ${actionButton}
+                                    </li>`;
                                     resultsList.append(listItem);
                                 });
                                 resultsContainer.html(resultsList);
@@ -829,6 +856,9 @@
             });
 
         });
+
+        const IS_LOGGED_IN = @json(Auth::check());
+        const LOGIN_URL = "{{ route('login') }}"
     </script>
 
     @stack('scripts')
