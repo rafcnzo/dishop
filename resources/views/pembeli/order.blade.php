@@ -465,21 +465,21 @@
 
         /* Modal Enhancements */
         /* .modal-content {
-                                    border: none;
-                                    border-radius: 16px;
-                                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-                                }
+                                            border: none;
+                                            border-radius: 16px;
+                                            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+                                        }
 
-                                .modal-header {
-                                    background: var(--pakistan-green);
-                                    color: white;
-                                    border-radius: 16px 16px 0 0;
-                                    padding: 1.5rem;
-                                }
+                                        .modal-header {
+                                            background: var(--pakistan-green);
+                                            color: white;
+                                            border-radius: 16px 16px 0 0;
+                                            padding: 1.5rem;
+                                        }
 
-                                .modal-title {
-                                    font-weight: 700;
-                                } */
+                                        .modal-title {
+                                            font-weight: 700;
+                                        } */
 
         .btn-close {
             filter: invert(1);
@@ -623,7 +623,8 @@
                                     data-invoice-url="#">
                                     <i class="fas fa-eye"></i> Lihat Detail
                                 </button>
-                                <a href="#" class="btn-outline-custom">
+                                <a href="{{ route('invoice.show', $order->id) }}" class="btn-outline-custom"
+                                    target="_blank">
                                     <i class="fas fa-download"></i> Download Invoice
                                 </a>
                                 @if ($order->timeline_status == 'pending')
@@ -732,7 +733,7 @@
                         <span style="color: var(--pakistan-green);">Total Pembayaran:</span>
                         <strong class="fs-5 ms-2" style="color: var(--pakistan-green);" id="modal-order-total"></strong>
                     </div>
-                    <a href="#" id="modal-invoice-btn" class="btn-primary-custom" target="_blank">
+                    <a  href="{{ route('invoice.show', $order->id) }}" id="modal-invoice-btn" class="btn-primary-custom" target="_blank">
                         <i class="fas fa-file-invoice"></i> Lihat Invoice
                     </a>
                 </div>

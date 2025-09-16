@@ -61,7 +61,6 @@ class CustomerController extends Controller
 
             $order->timeline_status = $timelineStatus;
             $order->status_text     = $statusText;
-            // Menyimpan keterangan dari tabel pembayaran (jika ada)
             $order->pembayaran_keterangan = $order->pembayaran_keterangan;
         }
 

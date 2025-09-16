@@ -104,7 +104,7 @@ class HomeController extends Controller
 
             $products = DB::table('products')
                 ->where('nama_barang', 'LIKE', "%{$query}%")
-                ->select('nama_barang', 'harga', 'image')
+                ->select('id', 'nama_barang', 'harga', 'image')
                 ->limit(5)
                 ->get();
 

@@ -32,7 +32,7 @@ class PenjualController extends Controller
 
         $stok_rendah = DB::table('products')
             ->where('stok', '<', 2)
-            ->select('id', 'nama_produk', 'stok')
+            ->select('id', 'nama_barang', 'stok')
             ->orderBy('stok', 'asc')
             ->get();
 
@@ -465,40 +465,6 @@ class PenjualController extends Controller
             ->get();
 
         return response()->json([
-            'transaksi' => $transaksi,
-            'detail'    => $detail,
-        ]);
-    }
-
-    public function invoice($id)
-    {
-        $transaksi = DB::table('transaksi')
-            ->leftJoin('pelanggan', 'transaksi.pelanggan_id', '=', 'pelanggan.id')
-            ->leftJoin('users', 'transaksi.pelanggan_id', '=', 'users.id')
-            ->select(
-                'transaksi.*',
-                'pelanggan.nama as nama_pelanggan',
-                'users.nama as nama_user'
-            )
-            ->where('transaksi.id', $id)
-            ->first();
-
-        if (! $transaksi) {
-            abort(404, 'Transaksi tidak ditemukan');
-        }
-
-        $detail = DB::table('transaksi_detail')
-            ->join('products', 'transaksi_detail.barang_id', '=', 'products.id')
-            ->select(
-                'products.nama_barang as produk_nama',
-                'transaksi_detail.harga',
-                'transaksi_detail.qty',
-                DB::raw('transaksi_detail.harga * transaksi_detail.qty as subtotal')
-            )
-            ->where('transaksi_detail.transaksi_id', $id)
-            ->get();
-
-        return view('penjual.laporan.invoice', [
             'transaksi' => $transaksi,
             'detail'    => $detail,
         ]);

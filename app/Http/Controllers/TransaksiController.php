@@ -101,7 +101,6 @@ class TransaksiController extends Controller
     public function setujuiTransaksi($id, Request $request)
     {
         try {
-            // Update status pembayaran di tabel pembayaran
             $affected = DB::table('pembayaran')
                 ->where('transaksi_id', $id)
                 ->update([
@@ -110,7 +109,6 @@ class TransaksiController extends Controller
                 ]);
 
             if ($affected) {
-                // Update juga kolom keterangan di tabel transaksi menjadi 'diproses'
                 DB::table('transaksi')
                     ->where('id', $id)
                     ->update([
@@ -202,7 +200,7 @@ class TransaksiController extends Controller
                 ->addColumn('action', function ($row) {
                     $btn = '';
                     $btn .= '<button onclick="showDetailModal(' . $row->id . ')" class="btn btn-success btn-sm" title="Lihat Detail"><i class="bx bx-show"></i></button> ';
-                    $btn .= '<button onclick="showInvoice(' . $row->id . ')" class="btn btn-warning btn-sm" title="Lihat Invoice"><i class="bx bx-receipt"></i></button>';
+                    $btn .= '<a href="' . route('invoice.show', $row->id) . '" target="_blank" class="btn btn-warning btn-sm" title="Lihat Invoice"><i class="bx bx-receipt"></i></a>';
                     return $btn;
                 })
                 ->rawColumns(['action'])
@@ -241,4 +239,91 @@ class TransaksiController extends Controller
     //     }
     // }
 
+    public function showInvoice($id)
+    {
+        // Ambil data transaksi
+        $transaksi = \DB::table('transaksi as t')
+            ->join('users as pelanggan', 't.pelanggan_id', '=', 'pelanggan.id')
+            ->select(
+                't.id',
+                't.waktu_transaksi',
+                'pelanggan.nama as nama_pelanggan',
+                'pelanggan.alamat as alamat_pelanggan',
+                'pelanggan.phone as telp_pelanggan'
+            )
+            ->where('t.id', $id)
+            ->first();
+
+        if (! $transaksi) {
+            return abort(404, 'Transaksi tidak ditemukan');
+        }
+
+        // Ambil detail item transaksi
+        $items = \DB::table('transaksi_detail as td')
+            ->join('products as p', 'td.barang_id', '=', 'p.id')
+            ->select(
+                'p.nama_barang',
+                'td.qty',
+                'td.harga',
+                \DB::raw('(td.qty * td.harga) as total_item')
+            )
+            ->where('td.transaksi_id', $id)
+            ->get();
+
+        // Ambil data pembayaran terakhir
+        $pembayaran = \DB::table('pembayaran')
+            ->where('transaksi_id', $id)
+            ->orderByDesc('waktu')
+            ->first();
+
+        // Slicing data atas nama dan no rekening dari catatan pembayaran (jika ada)
+        $atas_nama_customer = null;
+        $no_rek_customer = null;
+        if ($pembayaran && isset($pembayaran->keterangan) && !empty($pembayaran->keterangan)) {
+            // Format: Atasnama-NoRekening, contoh: Rafi-55738321
+            $parts = explode('-', $pembayaran->keterangan, 2);
+            if (count($parts) == 2) {
+                $atas_nama_customer = trim($parts[0]);
+                $no_rek_customer = trim($parts[1]);
+            }
+        }
+
+        // Hitung subtotal, diskon, dan total
+        $subtotal     = $items->sum('total_item');
+        $total_diskon = 0;
+        $total        = ($subtotal - $total_diskon);
+
+        $summary = [
+            'subtotal' => $subtotal,
+            'diskon'   => $total_diskon,
+            'total'    => $total,
+        ];
+
+        // Data perusahaan
+        $company = [
+            'name'             => config('app.company_name', 'Toko Bintang Motor Batam'),
+            'address'          => config('app.company_address', 'Alamat Perusahaan'),
+            'phone'            => config('app.company_phone', '-'),
+            'email'            => config('app.company_email', '-'),
+            'npwp'             => config('app.company_npwp', '-'),
+            'bank'             => config('app.company_bank', 'Bank'),
+            'bank_account'     => config('app.company_bank_account', '-'),
+            'bank_name'        => config('app.company_bank_name', '-'),
+            'payment_due_days' => config('app.company_payment_due_days', 14),
+        ];
+        $sales = \Auth::user();
+
+        // Load view untuk print invoice (trl print)
+        return view('layouts.invoice', [
+            'transaksi'         => $transaksi,
+            'items'             => $items,
+            'pembayaran'        => $pembayaran,
+            'sales'             => $sales,
+            'summary'           => $summary,
+            'company'           => $company,
+            'print_mode'        => true, // Tambahan untuk mode print jika dibutuhkan di blade
+            'atas_nama_customer'=> $atas_nama_customer,
+            'no_rek_customer'   => $no_rek_customer,
+        ]);
+    }
 }

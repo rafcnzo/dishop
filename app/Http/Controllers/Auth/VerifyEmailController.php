@@ -13,7 +13,6 @@ class VerifyEmailController extends Controller
      */
     public function __invoke(EmailVerificationRequest $request): RedirectResponse
     {
-        // Perbaikan: parameter 'absolute' pada route() tidak didukung di Laravel
         if ($request->user()->hasVerifiedEmail()) {
             return redirect()->intended(route('dashboard') . '?verified=1');
         }

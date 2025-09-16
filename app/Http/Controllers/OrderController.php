@@ -41,6 +41,22 @@ class OrderController extends Controller
                     'harga'        => $details['price'],
                     'dtcrea'       => Carbon::now(),
                 ];
+
+                // Update stok produk
+                $affected = DB::table('products')
+                    ->where('id', $id)
+                    ->decrement('stok', $details['qty']);
+
+                // Jika stok tidak cukup, rollback dan tampilkan error
+                if ($affected === 0) {
+                    DB::rollBack();
+                    $notification = [
+                        'type'    => 'error',
+                        'title'   => 'Stok Tidak Cukup!',
+                        'message' => 'Stok produk tidak mencukupi untuk pesanan Anda.',
+                    ];
+                    return redirect()->route('checkout.show')->with('notification', $notification);
+                }
             }
             DB::table('transaksi_detail')->insert($detailItems);
 

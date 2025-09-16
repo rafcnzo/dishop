@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
 
 <head>
     <!-- Required meta tags -->
@@ -37,43 +37,58 @@
                             <div class="card-body">
                                 <div class="border p-4 rounded">
                                     <div class="text-center">
-                                        <h3 class="">Sign in</h3>
+                                        <h3 class="">Masuk</h3>
                                     </div>
+                                    @if (session('error'))
+                                        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                                            {{ session('error') }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                                aria-label="Close"></button>
+                                        </div>
+                                    @endif
                                     <div class="form-body">
                                         <form class="row g-3" method="POST" action="{{ route('login') }}">
                                             @csrf
 
                                             <div class="col-12">
-                                                <label for="inputEmailAddress" class="form-label">Email Address</label>
-                                                <input type="email" name="email" class="form-control" id="email"
-                                                    placeholder="Email Address">
+                                                <label for="email" class="form-label">Alamat Email</label>
+                                                <input type="email" name="email"
+                                                    class="form-control @error('email') is-invalid @enderror"
+                                                    id="email" placeholder="Masukkan alamat email"
+                                                    value="{{ old('email') }}">
+                                                @error('email')
+                                                    <div class="invalid-feedback">{{ $message }}</div>
+                                                @enderror
                                             </div>
                                             <div class="col-12">
-                                                <label for="inputChoosePassword" class="form-label">Enter
-                                                    Password</label>
+                                                <label for="password" class="form-label">Kata Sandi</label>
                                                 <div class="input-group" id="show_hide_password">
                                                     <input type="password" name="password"
-                                                        class="form-control border-end-0" id="password" value=""
-                                                        placeholder="Enter Password"> <a href="javascript:;"
-                                                        class="input-group-text bg-transparent"><i
+                                                        class="form-control border-end-0 @error('password') is-invalid @enderror"
+                                                        id="password" value="" placeholder="Masukkan kata sandi">
+                                                    <a href="javascript:;" class="input-group-text bg-transparent"><i
                                                             class='bx bx-hide'></i></a>
                                                 </div>
+                                                @error('password')
+                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                                @enderror
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="form-check form-switch">
                                                     <input class="form-check-input" type="checkbox"
-                                                        id="flexSwitchCheckChecked" checked>
-                                                    <label class="form-check-label"
-                                                        for="flexSwitchCheckChecked">Remember Me</label>
+                                                        id="flexSwitchCheckChecked" name="remember"
+                                                        {{ old('remember') ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="flexSwitchCheckChecked">Ingat
+                                                        Saya</label>
                                                 </div>
                                             </div>
                                             <div class="col-md-6 text-end">
-                                                <a href="authentication-forgot-password.html">Forgot Password ?</a>
+                                                <a href="{{ route('password.request') }}">Lupa Kata Sandi?</a>
                                             </div>
                                             <div class="col-12">
                                                 <div class="d-grid">
                                                     <button type="submit" class="btn btn-primary"><i
-                                                            class="bx bxs-lock-open"></i>Sign in</button>
+                                                            class="bx bxs-lock-open"></i>Masuk</button>
                                                 </div>
                                             </div>
                                         </form>

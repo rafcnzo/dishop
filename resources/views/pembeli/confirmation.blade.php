@@ -715,9 +715,14 @@
 
                             {{-- Tambahkan catatan opsional --}}
                             <div class="mb-3 mt-3">
-                                <label for="keterangan" class="form-label">Catatan (Opsional)</label>
+                                <label for="keterangan" class="form-label">
+                                    Masukkan keterangan transfer <span class="text-danger">*</span>
+                                </label>
                                 <textarea class="form-control" name="keterangan" id="keterangan" rows="2"
-                                    placeholder="Tulis catatan tambahan jika diperlukan..."></textarea>
+                                    placeholder="Contoh: Rafi-55738321" required></textarea>
+                                <div class="form-text">
+                                    Masukkan keterangan transfer dengan format <strong>Atasnama-No rekening</strong>, contoh: <strong>Rafi-55738321</strong>
+                                </div>
                             </div>
 
                             <div class="d-grid gap-2 mt-auto">

@@ -81,6 +81,8 @@ Route::get('/force-logout', function () {
     return redirect('/login');
 });
 
+Route::get('/invoice/{id}', [App\Http\Controllers\TransaksiController::class, 'showInvoice'])->name('invoice.show');
+
 Route::controller(PenjualController::class)->prefix('laporan')->group(function () {
     Route::get('/', 'laporanIndex')->name('laporan.index');
     Route::get('/data', 'laporanData')->name('laporan.data');
@@ -88,7 +90,6 @@ Route::controller(PenjualController::class)->prefix('laporan')->group(function (
     Route::get('/chart-status', 'chartStatus')->name('laporan.chart-status');
     Route::get('/produk-terlaris', 'produkTerlaris')->name('laporan.produk-terlaris');
     Route::get('/export-detail/{tgl_awal}/{tgl_akhir}/{status}', 'exportDetail')->name('laporan.export-detail');
-    Route::get('/invoice/{id}', 'invoice')->name('laporan.invoice');
 });
 
 // routes untuk customer (pembeli)
@@ -108,5 +109,4 @@ Route::middleware(['auth', 'role:pembeli'])->group(function () {
 
     Route::get('/myorders', [App\Http\Controllers\CustomerController::class, 'indexOrders'])->name('orders');
     Route::get('/myorders/{id}', [App\Http\Controllers\CustomerController::class, 'showOrder'])->name('orders.show');
-    Route::get('/invoice/{id}', [App\Http\Controllers\CustomerController::class, 'showInvoice'])->name('invoice.show');
 });
