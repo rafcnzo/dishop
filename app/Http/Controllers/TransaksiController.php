@@ -9,6 +9,27 @@ class TransaksiController extends Controller
 {
     public function konfirmasiTransaksi(Request $request)
     {
+        // Ambil produk dengan stok rendah (misal < 2)
+        $stok_rendah = DB::table('products')
+            ->where('stok', '<', 2)
+            ->select('id', 'nama_barang', 'stok')
+            ->orderBy('stok', 'asc')
+            ->get();
+
+        // Ambil order yang menunggu konfirmasi
+        $order_konfirmasi = DB::table('transaksi')
+            ->where('keterangan', 'menunggu konfirmasi')
+            ->join('users', 'transaksi.pelanggan_id', '=', 'users.id')
+            ->select(
+                'transaksi.id',
+                'users.username as nama_pelanggan',
+                'transaksi.total',
+                'transaksi.waktu_transaksi',
+                'transaksi.keterangan'
+            )
+            ->orderBy('transaksi.waktu_transaksi', 'asc')
+            ->get();
+
         if ($request->ajax()) {
             $query = DB::table('transaksi')
                 ->join('users', 'transaksi.pelanggan_id', '=', 'users.id')
@@ -26,10 +47,8 @@ class TransaksiController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('action', function ($row) {
-                    if ($row->status_pembayaran === 'F' || is_null($row->status_pembayaran) || $row->status_pembayaran === '') {
-                        return '<button onclick="showDetailModal(' . $row->id . ')" class="btn btn-success btn-sm">Konfirmasi</button>';
-                        // } else if ($row->status_pembayaran === 'T' && $row->keterangan === 'diproses') {
-                        //     return '<button onclick="pesananDikirim(' . $row->id . ')" class="btn btn-primary btn-sm">Pesanan Dikirim</button>';
+                    if (is_null($row->status_pembayaran) || $row->status_pembayaran === '') {
+                        return '<button onclick="showDetailModal(\'' . $row->id . '\')" class="btn btn-success btn-sm">Konfirmasi</button>';
                     }
                     return '';
                 })
@@ -54,7 +73,10 @@ class TransaksiController extends Controller
                 ->make(true);
 
         }
-        return view('penjual.transaksi.konfirmasi');
+        return view('penjual.transaksi.konfirmasi', [
+            'stok_rendah' => $stok_rendah,
+            'order_konfirmasi' => $order_konfirmasi,
+        ]);
     }
 
     public function getDetailTransaksi($id)
@@ -113,6 +135,7 @@ class TransaksiController extends Controller
                     ->where('id', $id)
                     ->update([
                         'keterangan' => 'selesai',
+                        'dtmodi'            => now(),
                     ]);
 
                 return response()->json([
@@ -146,6 +169,13 @@ class TransaksiController extends Controller
                 ]);
 
             if ($affected) {
+
+                $itemsToRestore = DB::table('transaksi_detail')->where('transaksi_id', $id)->get();
+
+                foreach ($itemsToRestore as $item) {
+                    DB::table('products')->where('id', $item->barang_id)->increment('stok', $item->qty);
+                }
+
                 DB::table('transaksi')
                     ->where('id', $id)
                     ->update([
@@ -176,6 +206,26 @@ class TransaksiController extends Controller
 
     public function riwayatTransaksi(Request $request)
     {
+        // Ambil data stok rendah dan order konfirmasi seperti di PenjualController
+        $stok_rendah = DB::table('products')
+            ->where('stok', '<', 2)
+            ->select('id', 'nama_barang', 'stok')
+            ->orderBy('stok', 'asc')
+            ->get();
+
+        $order_konfirmasi = DB::table('transaksi')
+            ->where('keterangan', 'menunggu konfirmasi')
+            ->join('users', 'transaksi.pelanggan_id', '=', 'users.id')
+            ->select(
+                'transaksi.id',
+                'users.username as nama_pelanggan',
+                'transaksi.total',
+                'transaksi.waktu_transaksi',
+                'transaksi.keterangan'
+            )
+            ->orderBy('transaksi.waktu_transaksi', 'asc')
+            ->get();
+
         if ($request->ajax()) {
             $query = DB::table('transaksi')
                 ->join('users', 'transaksi.pelanggan_id', '=', 'users.id')
@@ -207,7 +257,10 @@ class TransaksiController extends Controller
                 ->make(true);
 
         }
-        return view('penjual.transaksi.riwayat');
+        return view('penjual.transaksi.riwayat', [
+            'stok_rendah' => $stok_rendah,
+            'order_konfirmasi' => $order_konfirmasi,
+        ]);
     }
 
     // public function pesananDikirim($id, Request $request)
@@ -258,7 +311,6 @@ class TransaksiController extends Controller
             return abort(404, 'Transaksi tidak ditemukan');
         }
 
-        // Ambil detail item transaksi
         $items = \DB::table('transaksi_detail as td')
             ->join('products as p', 'td.barang_id', '=', 'p.id')
             ->select(
@@ -270,25 +322,21 @@ class TransaksiController extends Controller
             ->where('td.transaksi_id', $id)
             ->get();
 
-        // Ambil data pembayaran terakhir
         $pembayaran = \DB::table('pembayaran')
             ->where('transaksi_id', $id)
             ->orderByDesc('waktu')
             ->first();
 
-        // Slicing data atas nama dan no rekening dari catatan pembayaran (jika ada)
         $atas_nama_customer = null;
-        $no_rek_customer = null;
-        if ($pembayaran && isset($pembayaran->keterangan) && !empty($pembayaran->keterangan)) {
-            // Format: Atasnama-NoRekening, contoh: Rafi-55738321
+        $no_rek_customer    = null;
+        if ($pembayaran && isset($pembayaran->keterangan) && ! empty($pembayaran->keterangan)) {
             $parts = explode('-', $pembayaran->keterangan, 2);
             if (count($parts) == 2) {
                 $atas_nama_customer = trim($parts[0]);
-                $no_rek_customer = trim($parts[1]);
+                $no_rek_customer    = trim($parts[1]);
             }
         }
 
-        // Hitung subtotal, diskon, dan total
         $subtotal     = $items->sum('total_item');
         $total_diskon = 0;
         $total        = ($subtotal - $total_diskon);
@@ -299,7 +347,6 @@ class TransaksiController extends Controller
             'total'    => $total,
         ];
 
-        // Data perusahaan
         $company = [
             'name'             => config('app.company_name', 'Toko Bintang Motor Batam'),
             'address'          => config('app.company_address', 'Alamat Perusahaan'),
@@ -313,17 +360,16 @@ class TransaksiController extends Controller
         ];
         $sales = \Auth::user();
 
-        // Load view untuk print invoice (trl print)
         return view('layouts.invoice', [
-            'transaksi'         => $transaksi,
-            'items'             => $items,
-            'pembayaran'        => $pembayaran,
-            'sales'             => $sales,
-            'summary'           => $summary,
-            'company'           => $company,
-            'print_mode'        => true, // Tambahan untuk mode print jika dibutuhkan di blade
-            'atas_nama_customer'=> $atas_nama_customer,
-            'no_rek_customer'   => $no_rek_customer,
+            'transaksi'          => $transaksi,
+            'items'              => $items,
+            'pembayaran'         => $pembayaran,
+            'sales'              => $sales,
+            'summary'            => $summary,
+            'company'            => $company,
+            'print_mode'         => true, // Tambahan untuk mode print jika dibutuhkan di blade
+            'atas_nama_customer' => $atas_nama_customer,
+            'no_rek_customer'    => $no_rek_customer,
         ]);
     }
 }

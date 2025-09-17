@@ -23,21 +23,39 @@ class CancelExpiredOrders extends Command
      */
     public function handle()
     {
-        // Tentukan batas waktu (1 jam yang lalu)
+        // Tentukan batas waktu (1 menit yang lalu) untuk keperluan test
         $expirationTime = Carbon::now()->subHour();
-        
-        // Cari pesanan yang statusnya 'pending' dan dibuat lebih dari 1 jam yang lalu
+
+        // Ambil semua pesanan yang statusnya 'pending' dan dibuat lebih dari 1 jam yang lalu
         $expiredOrders = DB::table('transaksi')
             ->where('keterangan', 'pending')
-            ->where('waktu_transaksi', '<=', $expirationTime);
+            ->where('waktu_transaksi', '<=', $expirationTime)
+            ->get();
 
-        // Hitung jumlah pesanan yang akan dibatalkan
         $count = $expiredOrders->count();
 
         if ($count > 0) {
-            // Update status pesanan tersebut menjadi 'dibatalkan'
-            $expiredOrders->update(['keterangan' => 'dibatalkan']);
-            $this->info($count . ' pesanan kedaluwarsa berhasil dibatalkan.');
+            foreach ($expiredOrders as $order) {
+                // Update status transaksi menjadi dibatalkan dan update dtmodi
+                DB::table('transaksi')
+                    ->where('id', $order->id)
+                    ->update([
+                        'keterangan' => 'dibatalkan',
+                        'dtmodi' => now(),
+                    ]);
+
+                // Ambil semua item pesanan untuk mengembalikan stok
+                $orderDetails = DB::table('transaksi_detail')
+                    ->where('transaksi_id', $order->id)
+                    ->get();
+
+                foreach ($orderDetails as $item) {
+                    DB::table('products')
+                        ->where('id', $item->barang_id)
+                        ->increment('stok', $item->qty);
+                }
+            }
+            $this->info($count . ' pesanan kedaluwarsa berhasil dibatalkan dan stok produk telah dikembalikan.');
         } else {
             $this->info('Tidak ada pesanan kedaluwarsa yang ditemukan.');
         }

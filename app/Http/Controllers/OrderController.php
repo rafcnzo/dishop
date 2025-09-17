@@ -24,7 +24,28 @@ class OrderController extends Controller
                 $totalHarga += $details['price'] * $details['qty'];
             }
 
-            $newOrderId = DB::table('transaksi')->insertGetId([
+            // Generate id_transaksi dengan format TRXDDMMYYYY-0001
+            $tanggal = Carbon::now()->format('dmY');
+            $prefix = 'TRX' . $tanggal . '-';
+
+            // Ambil nomor urut terakhir untuk hari ini
+            $lastOrder = DB::table('transaksi')
+                ->where('id', 'like', $prefix . '%')
+                ->orderBy('id', 'desc')
+                ->first();
+
+            if ($lastOrder && preg_match('/^TRX\d{8}-(\d{4})$/', $lastOrder->id, $matches)) {
+                $lastNumber = intval($matches[1]);
+                $newNumber = $lastNumber + 1;
+            } else {
+                $newNumber = 1;
+            }
+            $nomorUrut = str_pad($newNumber, 4, '0', STR_PAD_LEFT);
+            $idTransaksi = $prefix . $nomorUrut;
+
+            // Simpan transaksi dengan id_transaksi custom
+            DB::table('transaksi')->insert([
+                'id'    => $idTransaksi,
                 'pelanggan_id'    => Auth::id(),
                 'waktu_transaksi' => Carbon::now(),
                 'total'           => $totalHarga,
@@ -35,7 +56,7 @@ class OrderController extends Controller
             $detailItems = [];
             foreach ($cart as $id => $details) {
                 $detailItems[] = [
-                    'transaksi_id' => $newOrderId,
+                    'transaksi_id' => $idTransaksi,
                     'barang_id'    => $id,
                     'qty'          => $details['qty'],
                     'harga'        => $details['price'],
@@ -64,7 +85,7 @@ class OrderController extends Controller
 
             DB::commit();
 
-            return redirect()->route('payment.confirmation', ['order' => $newOrderId]);
+            return redirect()->route('payment.confirmation', ['order' => $idTransaksi]);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -82,12 +103,15 @@ class OrderController extends Controller
         $userId = Auth::id();
 
         try {
+            DB::beginTransaction();
+
             $order = DB::table('transaksi')
                 ->where('id', $id)
                 ->where('pelanggan_id', $userId)
                 ->first();
 
             if (! $order) {
+                DB::rollBack();
                 return response()->json([
                     'success' => false,
                     'message' => 'Pesanan tidak ditemukan.',
@@ -95,22 +119,39 @@ class OrderController extends Controller
             }
 
             if ($order->keterangan !== 'pending') {
+                DB::rollBack();
                 return response()->json([
                     'success' => false,
                     'message' => 'Pesanan tidak dapat dibatalkan karena sudah diproses.',
                 ], 422); // 422 Unprocessable Entity
             }
 
+            $orderDetails = DB::table('transaksi_detail')
+                ->where('transaksi_id', $id)
+                ->get();
+
+            foreach ($orderDetails as $item) {
+                DB::table('products')
+                    ->where('id', $item->barang_id)
+                    ->increment('stok', $item->qty);
+            }
+
             DB::table('transaksi')
                 ->where('id', $id)
-                ->update(['keterangan' => 'dibatalkan']);
+                ->update([
+                    'keterangan' => 'dibatalkan',
+                    'dtmodi'     => now(),
+                ]);
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Pesanan berhasil dibatalkan.',
+                'message' => 'Pesanan berhasil dibatalkan dan stok produk telah dikembalikan.',
             ]);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Log::error('Gagal batalkan pesanan: ' . $e->getMessage()); // Log error untuk admin
             return response()->json([
                 'success' => false,
@@ -130,13 +171,39 @@ class OrderController extends Controller
             abort(404, 'Pesanan tidak ditemukan.');
         }
 
-        $expirationTime = \Carbon\Carbon::parse($order->waktu_transaksi)->addHour();
-
         if ($order->keterangan !== 'pending') {
             $notification = [
                 'type'    => 'info',
                 'title'   => 'Info Pesanan',
                 'message' => 'Pesanan ini tidak lagi menunggu pembayaran. Status saat ini: ' . ucfirst($order->keterangan),
+            ];
+            return redirect()->route('orders')->with('notification', $notification);
+        }
+
+        $expirationTime = Carbon::parse($order->waktu_transaksi)->addHour();
+
+        if ($expirationTime->isPast()) {
+            // Update status transaksi menjadi dibatalkan
+            DB::table('transaksi')->where('id', $orderId)->update([
+                'keterangan' => 'dibatalkan',
+                'dtmodi'     => now(),
+            ]);
+
+            // Ambil semua item pesanan untuk mengembalikan stok
+            $orderDetails = DB::table('transaksi_detail')
+                ->where('transaksi_id', $orderId)
+                ->get();
+
+            foreach ($orderDetails as $item) {
+                DB::table('products')
+                    ->where('id', $item->barang_id)
+                    ->increment('stok', $item->qty);
+            }
+
+            $notification = [
+                'type'    => 'warning',
+                'title'   => 'Waktu Habis',
+                'message' => 'Waktu pembayaran untuk pesanan #' . $orderId . ' telah berakhir dan pesanan otomatis dibatalkan.',
             ];
             return redirect()->route('orders')->with('notification', $notification);
         }
@@ -183,7 +250,7 @@ class OrderController extends Controller
         DB::table('pembayaran')->insert([
             'transaksi_id'   => $orderId,
             'bukti_transfer' => $fileName,
-            'metode'         => $order->metode_pembayaran ?? 'Bank Transfer',
+            'metode'         => $request->input('metode_pembayaran'),
             'waktu'          => Carbon::now(),
             'keterangan'     => $request->input('keterangan'),
         ]);

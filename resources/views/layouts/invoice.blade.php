@@ -303,16 +303,6 @@
                         -
                     @endif
                 </p>
-                <p>
-                    <strong>Catatan:</strong>
-                    @if ($pembayaran && isset($pembayaran->status) && $pembayaran->status == 'ditolak')
-                        Pembayaran ditolak
-                    @elseif($pembayaran && isset($pembayaran->catatan))
-                        {{ $pembayaran->catatan }}
-                    @else
-                        -
-                    @endif
-                </p>
             </div>
         </section>
 
@@ -342,34 +332,55 @@
         </main>
 
         <footer class="invoice-summary-footer">
-            <div class="payment-info">
-                <h4>Informasi Pembayaran Customer</h4>
-                <p>Bank Transfer</p>
-                <p>No. Rekening: 
-                    @if (!empty($no_rek_customer))
-                        {{ $no_rek_customer }}
-                    @else
-                        -
-                    @endif
-                </p>
-                <p>Atas Nama: 
-                    @if (!empty($atas_nama_customer))
-                        {{ $atas_nama_customer }}
-                    @else
-                        -
-                    @endif
-                </p>
-                <br>
-                <p>Hormat kami, <br>
-                    <strong>
-                        @if ($sales)
-                            {{ $sales->nama }}
+            @if ($pembayaran && strtolower($pembayaran->metode) == 'qris')
+                <div class="payment-info">
+                    <br>
+                    <p>Hormat kami, <br>
+                        <strong>
+                            @if ($sales)
+                                {{ $sales->nama }}
+                            @else
+                                Penjual (Sistem)
+                            @endif
+                        </strong>
+                    </p>
+                </div>
+            @else
+                <div class="payment-info">
+                    <h4>Informasi Pembayaran Customer</h4>
+                    <p>
+                        @if ($pembayaran)
+                            {{ strtoupper($pembayaran->metode) }}
                         @else
-                            Penjual (Sistem)
+                            -
                         @endif
-                    </strong>
-                </p>
-            </div>
+                    </p>
+                    <p>No. Rekening:
+                        @if (!empty($no_rek_customer))
+                            {{ $no_rek_customer }}
+                        @else
+                            -
+                        @endif
+                    </p>
+                    <p>Atas Nama:
+                        @if (!empty($atas_nama_customer))
+                            {{ $atas_nama_customer }}
+                        @else
+                            -
+                        @endif
+                    </p>
+                    <br>
+                    <p>Hormat kami, <br>
+                        <strong>
+                            @if ($sales)
+                                {{ $sales->nama }}
+                            @else
+                                Penjual (Sistem)
+                            @endif
+                        </strong>
+                    </p>
+                </div>
+            @endif
             <div class="totals">
                 <p><span>Subtotal:</span> <strong>Rp {{ number_format($summary['subtotal'], 0, ',', '.') }}</strong>
                 </p>

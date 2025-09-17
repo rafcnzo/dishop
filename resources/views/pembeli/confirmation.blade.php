@@ -576,7 +576,6 @@
                                     {{ \Carbon\Carbon::parse($order->waktu_transaksi)->format('d M Y, H:i') }}</p>
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Metode Pembayaran:</strong> Transfer Bank</p>
                                 <p><strong>Total:</strong> <span class="text-success fw-bold">Rp
                                         {{ number_format($order->total, 0, ',', '.') }}</span></p>
                             </div>
@@ -622,110 +621,152 @@
                 </div>
             </div>
         </div>
-        {{-- KODE BARU YANG SUDAH DIPERBAIKI --}}
+        {{-- GANTI ROW KEDUA DI konfirmasi.blade.php DENGAN INI --}}
+
         <div class="row mb-3 row-equal-height">
-
-            <div class="col-lg-7">
-                {{-- Hapus d-flex align-items-stretch dari kolom --}}
+            {{-- Kita gabungkan semua form dalam satu kolom agar lebih rapi --}}
+            <div class="col-lg-12">
                 <div class="confirmation-card card-full-height">
-                    {{-- Bungkus konten dengan card-body agar flexbox bekerja --}}
                     <div class="card-body">
-                        <h3><i class="fas fa-university"></i> Detail Transfer Bank</h3>
-                        <p class="mb-3">Silakan transfer sejumlah total pesanan ke salah satu rekening bank berikut:</p>
-                        <div class="bank-details">
-                            <div class="bank-item">
-                                <span><strong>Bank BCA</strong></span>
-                                <span></span>
-                            </div>
-                            <div class="bank-item">
-                                <span>No. Rekening:</span>
-                                <span>
-                                    1234567890
-                                    <button class="copy-btn ms-2" onclick="copyToClipboard('1234567890')">
-                                        <i class="fas fa-copy"></i>
-                                    </button>
-                                </span>
-                            </div>
-                            <div class="bank-item">
-                                <span>Atas Nama:</span>
-                                <span>PT. Online Shop Indonesia</span>
-                            </div>
-                        </div>
-                        <div class="bank-details">
-                            <div class="bank-item">
-                                <span><strong>Bank Mandiri</strong></span>
-                                <span></span>
-                            </div>
-                            <div class="bank-item">
-                                <span>No. Rekening:</span>
-                                <span>
-                                    0987654321
-                                    <button class="copy-btn ms-2" onclick="copyToClipboard('0987654321')">
-                                        <i class="fas fa-copy"></i>
-                                    </button>
-                                </span>
-                            </div>
-                            <div class="bank-item">
-                                <span>Atas Nama:</span>
-                                <span>PT. Online Shop Indonesia</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-lg-5">
-                <div class="confirmation-card card-full-height">
-                    <div class="card-body d-flex flex-column">
-                        <h3><i class="fas fa-upload"></i> Unggah Bukti Pembayaran</h3>
-
                         <form id="confirmationForm" action="{{ route('payment.confirm') }}" method="POST"
-                            enctype="multipart/form-data" class="flex-grow-1 d-flex flex-column">
+                            enctype="multipart/form-data">
                             @csrf
                             <input type="hidden" name="order_id" value="{{ $order->id }}">
 
-                            {{-- Konten form (upload area, preview, catatan) --}}
-                            <div class="upload-area" id="uploadArea">
-                                <div class="upload-icon">
-                                    <i class="fas fa-cloud-upload-alt"></i>
-                                </div>
-                                <div class="upload-text">Klik untuk unggah atau seret file ke sini</div>
-                                <div class="upload-subtext">PNG, JPG, PDF maksimal 5MB</div>
-                                <input type="file" name="payment_proof" class="file-input" id="fileInput"
-                                    accept=".png,.jpg,.jpeg,.pdf">
-                            </div>
+                            <div class="row">
+                                {{-- Kolom Kiri: Pilihan Metode dan Instruksi --}}
+                                <div class="col-lg-7">
+                                    <h3><i class="fas fa-credit-card"></i> Pilih Metode Pembayaran</h3>
 
-                            <div class="file-preview flex-column" id="filePreview" style="display: none;">
-                                <div class="w-100 d-flex justify-content-center mb-3">
-                                    <div class="file-icon" id="preview-container"
-                                        style="width:120px;height:120px;font-size:2.5rem;display:flex;align-items:center;justify-content:center;">
-                                        {{-- Preview gambar atau ikon akan ditampilkan di sini oleh JavaScript --}}
+                                    {{-- Pilihan Transfer Bank --}}
+                                    <div class="payment-method">
+                                        <div class="payment-method-info d-flex align-items-center">
+                                            <span class="me-2">
+                                                <input type="radio" name="metode_pembayaran" value="Transfer Bank">
+                                            </span>
+                                            <span class="payment-method-icon me-2">
+                                                <i class="fas fa-university"></i>
+                                            </span>
+                                            <span>
+                                                <strong>Transfer Bank</strong>
+                                                <div class="text-muted small">BCA, Mandiri, dll.</div>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {{-- Pilihan QRIS --}}
+                                    <div class="payment-method">
+                                        <div class="payment-method-info d-flex align-items-center">
+                                            <span class="me-2">
+                                                <input type="radio" name="metode_pembayaran" value="QRIS">
+                                            </span>
+                                            <span class="payment-method-icon me-2">
+                                                <i class="fas fa-qrcode"></i>
+                                            </span>
+                                            <span>
+                                                <strong>QRIS</strong>
+                                                <div class="text-muted small">GoPay, OVO, DANA, dll.</div>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {{-- Detail Instruksi Pembayaran (Dinamis) --}}
+                                    <div id="payment-instructions" class="mt-4">
+                                        <div id="bank_transfer_details" style="display: none;">
+                                            <p class="mb-3">Silakan transfer ke salah satu rekening bank berikut:</p>
+                                            <div class="bank-details">
+                                                <div class="bank-item">
+                                                    <span><strong>Bank BCA</strong></span>
+                                                    <span></span>
+                                                </div>
+                                                <div class="bank-item">
+                                                    <span>No. Rekening:</span>
+                                                    <span>
+                                                        1234567890
+                                                        <button class="copy-btn ms-2"
+                                                            onclick="copyToClipboard('1234567890')">
+                                                            <i class="fas fa-copy"></i>
+                                                        </button>
+                                                    </span>
+                                                </div>
+                                                <div class="bank-item">
+                                                    <span>Atas Nama:</span>
+                                                    <span>PT. Online Shop Indonesia</span>
+                                                </div>
+                                            </div>
+                                            <div class="bank-details">
+                                                <div class="bank-item">
+                                                    <span><strong>Bank Mandiri</strong></span>
+                                                    <span></span>
+                                                </div>
+                                                <div class="bank-item">
+                                                    <span>No. Rekening:</span>
+                                                    <span>
+                                                        0987654321
+                                                        <button class="copy-btn ms-2"
+                                                            onclick="copyToClipboard('0987654321')">
+                                                            <i class="fas fa-copy"></i>
+                                                        </button>
+                                                    </span>
+                                                </div>
+                                                <div class="bank-item">
+                                                    <span>Atas Nama:</span>
+                                                    <span>PT. Online Shop Indonesia</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="qris_details" style="display: none;" class="text-center">
+                                            <img src="{{ asset('images/qris-placeholder.png') }}" alt="Kode QRIS"
+                                                class="img-fluid rounded" style="max-width: 250px;">
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="d-flex align-items-center justify-content-between w-100">
-                                    <div class="file-info">
-                                        <div class="file-name" id="fileName"></div>
-                                        <div class="file-size" id="fileSize"></div>
+
+                                {{-- Kolom Kanan: Upload Bukti Bayar --}}
+                                <div class="col-lg-5">
+                                    <h3><i class="fas fa-upload"></i> Unggah Bukti Pembayaran</h3>
+                                    <div class="upload-area" id="uploadArea">
+                                        <div class="upload-icon">
+                                            <i class="fas fa-cloud-upload-alt"></i>
+                                        </div>
+                                        <div class="upload-text">Klik untuk unggah atau seret file ke sini</div>
+                                        <div class="upload-subtext">PNG, JPG, PDF maksimal 5MB</div>
+                                        <input type="file" name="payment_proof" class="file-input" id="fileInput"
+                                            accept=".png,.jpg,.jpeg,.pdf">
                                     </div>
-                                    <button type="button" class="file-remove ms-3" id="fileRemove">
-                                        <i class="fas fa-times"></i>
-                                    </button>
+                                    <div class="file-preview flex-column" id="filePreview" style="display: none;">
+                                        <div class="w-100 d-flex justify-content-center mb-3">
+                                            <div class="file-icon" id="preview-container"
+                                                style="width:120px;height:120px;font-size:2.5rem;display:flex;align-items:center;justify-content:center;">
+                                                {{-- Preview gambar atau ikon akan ditampilkan di sini oleh JavaScript --}}
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center justify-content-between w-100">
+                                            <div class="file-info">
+                                                <div class="file-name" id="fileName"></div>
+                                                <div class="file-size" id="fileSize"></div>
+                                            </div>
+                                            <button type="button" class="file-remove ms-3" id="fileRemove">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3">
+                                        <label for="keterangan" class="form-label">Catatan Tambahan (Opsional)</label>
+                                        <textarea class="form-control" name="keterangan" id="keterangan" rows="3"
+                                            placeholder="Contoh: Transfer dari rekening a.n. Budi"></textarea>
+                                        <div class="form-text text-danger mt-1" id="bankTransferNote" style="font-size: 0.95em;">
+                                            <strong>Jika memilih transfer bank, kolom ini <u>wajib diisi</u> dengan format: <br>
+                                            <span class="text-dark">Atas Nama - Nomor Rekening</span> <br>
+                                            <em>Contoh: RAFI - 1234567</em>
+                                            </strong>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            {{-- Tambahkan catatan opsional --}}
-                            <div class="mb-3 mt-3">
-                                <label for="keterangan" class="form-label">
-                                    Masukkan keterangan transfer <span class="text-danger">*</span>
-                                </label>
-                                <textarea class="form-control" name="keterangan" id="keterangan" rows="2"
-                                    placeholder="Contoh: Rafi-55738321" required></textarea>
-                                <div class="form-text">
-                                    Masukkan keterangan transfer dengan format <strong>Atasnama-No rekening</strong>, contoh: <strong>Rafi-55738321</strong>
-                                </div>
-                            </div>
-
-                            <div class="d-grid gap-2 mt-auto">
+                            {{-- Tombol Submit Form --}}
+                            <div class="d-grid gap-2 mt-4 pt-4 border-top">
                                 <button type="submit" class="btn btn-primary-custom btn-lg" id="submitBtn" disabled>
                                     <i class="fas fa-check me-2"></i>Konfirmasi Pembayaran
                                 </button>
@@ -734,7 +775,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
         <div class="row">
             <div class="col-lg-12">
@@ -773,12 +813,17 @@
                         document.getElementById('confirmationForm').style.opacity = '0.5';
                         document.getElementById('submitBtn').disabled = true;
 
+                        // Tampilkan notif yang tidak bisa di-close sebelum diklik
                         showNotification('warning', 'Waktu Habis',
-                            'Waktu pembayaran untuk pesanan ini telah berakhir. Halaman akan dimuat ulang.'
+                            'Waktu pembayaran untuk pesanan ini telah berakhir. Anda akan diarahkan ke halaman utama.', {
+                                autoClose: false, // notif tidak auto close
+                                closeButton: true // harus diklik untuk close
+                            }
                         );
 
+                        // Tetap redirect ke halaman utama setelah 3 detik, walau notif belum di-close
                         setTimeout(function() {
-                            window.location.reload();
+                            window.location.href = '/';
                         }, 3000);
 
                         return; // Hentikan interval
@@ -795,6 +840,28 @@
 
                     countdownElement.innerHTML = formattedTime;
                 }, 1000);
+
+                const paymentMethods = document.querySelectorAll('.payment-method');
+                const bankDetails = document.getElementById('bank_transfer_details');
+                const qrisDetails = document.getElementById('qris_details');
+
+                paymentMethods.forEach(method => {
+                    method.addEventListener('click', function() {
+                        paymentMethods.forEach(m => m.classList.remove('selected'));
+                        this.classList.add('selected');
+
+                        const radio = this.querySelector('input[type="radio"]');
+                        radio.checked = true;
+
+                        if (radio.value === 'Transfer Bank') {
+                            bankDetails.style.display = 'block';
+                            qrisDetails.style.display = 'none';
+                        } else if (radio.value === 'QRIS') {
+                            bankDetails.style.display = 'none';
+                            qrisDetails.style.display = 'block';
+                        }
+                    });
+                });
             }
 
             // Upload area tetap
@@ -984,7 +1051,7 @@
                                             // Jika redirect, kemungkinan sukses
                                             showNotification('success', 'Berhasil',
                                                 'Konfirmasi pembayaran Anda telah diterima. Anda akan diarahkan ke halaman pesanan.'
-                                                );
+                                            );
                                             setTimeout(() => {
                                                 window.location.href = response.url;
                                             }, 2000);
@@ -1005,14 +1072,14 @@
                                             // Tampilkan error validasi
                                             let pesan = '';
                                             Object.values(data.errors).forEach(function(
-                                            msgArr) {
+                                                msgArr) {
                                                 pesan += msgArr.join('<br>');
                                             });
                                             showNotification('error', 'Validasi Gagal', pesan);
                                         } else if (data && data.success) {
                                             showNotification('success', 'Berhasil',
                                                 'Konfirmasi pembayaran Anda telah diterima. Anda akan diarahkan ke halaman pesanan.'
-                                                );
+                                            );
                                             setTimeout(() => {
                                                 window.location.href =
                                                     '{{ route('orders') }}';

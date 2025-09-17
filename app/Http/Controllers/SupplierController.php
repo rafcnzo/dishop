@@ -14,7 +14,28 @@ class SupplierController extends Controller
             ->where('status', 'active')
             ->get();
 
-        return view('penjual.supplier.semua_supplier', compact('supplier'));
+        // Ambil data stok rendah
+        $stok_rendah = \DB::table('products')
+            ->where('stok', '<', 2)
+            ->select('id', 'nama_barang', 'stok')
+            ->orderBy('stok', 'asc')
+            ->get();
+
+        // Ambil data order konfirmasi
+        $order_konfirmasi = \DB::table('transaksi')
+            ->where('keterangan', 'menunggu konfirmasi')
+            ->join('users', 'transaksi.pelanggan_id', '=', 'users.id')
+            ->select(
+                'transaksi.id',
+                'users.username as nama_pelanggan',
+                'transaksi.total',
+                'transaksi.waktu_transaksi',
+                'transaksi.keterangan'
+            )
+            ->orderBy('transaksi.waktu_transaksi', 'asc')
+            ->get();
+
+        return view('penjual.supplier.semua_supplier', compact('supplier', 'stok_rendah', 'order_konfirmasi'));
     }
 
     public function TambahSupplier() {

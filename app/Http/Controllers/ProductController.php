@@ -12,12 +12,33 @@ use Intervention\Image\Laravel\Facades\Image;
 class ProductController extends Controller
 {
     public function SemuaProduk(){
-        // $produk = Product::latest()->get();
+        // Ambil data produk
         $produk = DB::table('products AS p')
             ->join('users AS u', 'p.supplier_id', '=', 'u.id')
             ->get(['p.*', 'u.nama']);
 
-        return view('penjual.produk.semua_produk', compact('produk'));
+        // Ambil data stok rendah
+        $stok_rendah = DB::table('products')
+            ->where('stok', '<', 2)
+            ->select('id', 'nama_barang', 'stok')
+            ->orderBy('stok', 'asc')
+            ->get();
+
+        // Ambil data order konfirmasi
+        $order_konfirmasi = DB::table('transaksi')
+            ->where('keterangan', 'menunggu konfirmasi')
+            ->join('users', 'transaksi.pelanggan_id', '=', 'users.id')
+            ->select(
+                'transaksi.id',
+                'users.username as nama_pelanggan',
+                'transaksi.total',
+                'transaksi.waktu_transaksi',
+                'transaksi.keterangan'
+            )
+            ->orderBy('transaksi.waktu_transaksi', 'asc')
+            ->get();
+
+        return view('penjual.produk.semua_produk', compact('produk', 'stok_rendah', 'order_konfirmasi'));
     }
 
     public function TambahProduk() {

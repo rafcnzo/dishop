@@ -520,17 +520,14 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
 
-            // NAMA FUNGSI KITA STANDARKAN MENJADI updateCheckoutTotals
             function updateCheckoutTotals(response) {
                 if (!response || !response.cartItems) return;
 
                 const totalPembayaranText = document.getElementById('totalPembayaranText');
 
-                // Loop melalui semua input di halaman
                 document.querySelectorAll('.qty-input').forEach(input => {
                     const productId = input.id.split('_')[1];
 
-                    // Cek data dari server
                     if (response.cartItems[productId]) {
                         const serverItem = response.cartItems[productId];
                         input.value = serverItem.qty; // Update Qty dari server
@@ -547,13 +544,11 @@
                     }
                 });
 
-                // Update Total Keseluruhan dari server
                 if (totalPembayaranText) {
                     totalPembayaranText.textContent = 'Rp ' + response.cartTotal.toLocaleString('id-ID');
                 }
             }
 
-            // Event listener untuk tombol +/-
             document.querySelectorAll('.qty-change').forEach(button => {
                 button.addEventListener('click', function(event) {
                     event.stopImmediatePropagation(); // Mencegah script ganda
@@ -584,11 +579,8 @@
                             ...data
                         },
                         success: function(response) {
-                            // HANYA PANGGIL FUNGSI LOKAL UNTUK HALAMAN INI
                             updateCheckoutTotals(response);
 
-                            // DAN PANGGIL FUNGSI GLOBAL UNTUK UPDATE BADGE KERANJANG
-                            // (Kita asumsikan updateCartView sudah ada di app.blade.php)
                             if (typeof updateCartView === 'function') {
                                 // Cukup update badge-nya saja, tidak perlu render ulang semua
                                 const cartBadge = $('#cart-count-badge');

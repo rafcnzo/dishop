@@ -22,6 +22,13 @@
                 <div class="price-container">
                     <span class="current-price">Rp {{ number_format($product->price, 0, ',', '.') }}</span>
                 </div>
+                <div class="stok-container">
+                    @if($product->stok == 0)
+                        <span class="stok-text text-danger">Terjual Habis</span>
+                    @else
+                        <span class="stok-text">Tersedia : {{ number_format($product->stok) }}</span>
+                    @endif
+                </div>
             </div>
 
             <div class="mt-auto">

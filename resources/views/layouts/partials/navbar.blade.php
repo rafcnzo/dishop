@@ -327,18 +327,14 @@
 @endauth
 
 <script>
-    // Auto-collapse navbar on mobile when clicking nav links
     document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.navbar-nav .nav-link').forEach(link => {
             link.addEventListener('click', (event) => {
-                // Tambahkan pengecekan di sini
-                // Jika link yang diklik adalah dropdown, jangan lakukan apa-apa
                 if (link.classList.contains('dropdown-toggle')) {
                     return;
                 }
 
                 const navbarCollapse = document.querySelector('.navbar-collapse');
-                // Pastikan navbar-collapse ada dan sedang terlihat (expanded)
                 if (navbarCollapse && navbarCollapse.classList.contains('show')) {
                     const bsCollapse = new bootstrap.Collapse(navbarCollapse, {
                         toggle: false
@@ -348,12 +344,10 @@
             });
         });
 
-        // Search functionality
         const searchInput = document.getElementById('search-input');
         const searchResults = document.getElementById('search-results-container');
 
         searchInput.addEventListener('focus', function() {
-            // Logika untuk menampilkan hasil pencarian jika diperlukan
         });
 
         document.addEventListener('click', function(e) {

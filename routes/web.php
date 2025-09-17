@@ -9,6 +9,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\TransaksiController;
+use App\Http\Controllers\CartController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('index');
@@ -24,7 +25,7 @@ Route::get('/register', function () {
 });
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return redirect()->route('index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -89,15 +90,15 @@ Route::controller(PenjualController::class)->prefix('laporan')->group(function (
     Route::get('/chart-penjualan', 'chartPenjualan')->name('laporan.chart-penjualan');
     Route::get('/chart-status', 'chartStatus')->name('laporan.chart-status');
     Route::get('/produk-terlaris', 'produkTerlaris')->name('laporan.produk-terlaris');
-    Route::get('/export-detail/{tgl_awal}/{tgl_akhir}/{status}', 'exportDetail')->name('laporan.export-detail');
+    Route::get('/export-detail/{tgl_awal}/{tgl_akhir}', 'exportDetail')->name('laporan.export-detail');
 });
 
 // routes untuk customer (pembeli)
 Route::middleware(['auth', 'role:pembeli'])->group(function () {
-    Route::post('/cart/add/{productId}', [App\Http\Controllers\CartController::class, 'addToCart'])->name('cart.add');
-    Route::get('/cart/items', [App\Http\Controllers\CartController::class, 'getCartItems'])->name('cart.items');
-    Route::post('/cart/update/{productId}', [App\Http\Controllers\CartController::class, 'updateCart'])->name('cart.update');
-    Route::post('/cart/remove/{productId}', [App\Http\Controllers\CartController::class, 'removeCartItem'])->name('cart.remove');
+    Route::post('/cart/add/{productId}', [CartController::class, 'addToCart'])->name('cart.add');
+    Route::get('/cart/items', [CartController::class, 'getCartItems'])->name('cart.items');
+    Route::post('/cart/update/{productId}', [CartController::class, 'updateCart'])->name('cart.update');
+    Route::post('/cart/remove/{productId}', [CartController::class, 'removeCartItem'])->name('cart.remove');
 
     Route::post('/checkout', [CheckoutController::class, 'processCheckout'])->name('checkout.process');
     Route::get('/pembayaran', [CheckoutController::class, 'showPaymentPage'])->name('checkout.show');
@@ -107,6 +108,6 @@ Route::middleware(['auth', 'role:pembeli'])->group(function () {
     Route::post('/submit-konfirmasi', [OrderController::class, 'submitConfirmation'])->name('payment.confirm');
     Route::post('/order/cancel/{id}', [OrderController::class, 'cancelOrder'])->name('order.cancel');
 
-    Route::get('/myorders', [App\Http\Controllers\CustomerController::class, 'indexOrders'])->name('orders');
-    Route::get('/myorders/{id}', [App\Http\Controllers\CustomerController::class, 'showOrder'])->name('orders.show');
+    Route::get('/myorders', [CustomerController::class, 'indexOrders'])->name('orders');
+    Route::get('/myorders/{id}', [CustomerController::class, 'showOrder'])->name('orders.show');
 });

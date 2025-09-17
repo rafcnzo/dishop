@@ -59,19 +59,25 @@
                     <li class="nav-item dropdown dropdown-large">
                         <a class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative" href="#"
                             role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            @php
+                                $jumlah_stok_rendah = isset($stok_rendah) && count($stok_rendah) > 0 ? count($stok_rendah) : 0;
+                                $jumlah_order_konfirmasi = isset($order_konfirmasi) && count($order_konfirmasi) > 0 ? count($order_konfirmasi) : 0;
+                                $jumlah_notifikasi = $jumlah_stok_rendah + $jumlah_order_konfirmasi;
+                            @endphp
                             <span class="alert-count">
-                                {{ isset($stok_rendah) && count($stok_rendah) > 0 ? count($stok_rendah) : 0 }}
+                                {{ $jumlah_notifikasi }}
                             </span>
                             <i class='bx bx-bell'></i>
                         </a>
                         <div class="dropdown-menu dropdown-menu-end">
                             <a href="javascript:;">
                                 <div class="msg-header">
-                                    <p class="msg-header-title">Notifikasi Stok Rendah</p>
+                                    <p class="msg-header-title">Notifikasi</p>
                                     {{-- <p class="msg-header-clear ms-auto">Tandai semua sudah dibaca</p> --}}
                                 </div>
                             </a>
                             <div class="header-notifications-list">
+                                {{-- Notifikasi Stok Rendah --}}
                                 @if (isset($stok_rendah) && count($stok_rendah) > 0)
                                     @foreach ($stok_rendah as $produk)
                                         <a class="dropdown-item" href="javascript:;">
@@ -81,7 +87,7 @@
                                                 </div>
                                                 <div class="flex-grow-1">
                                                     <h6 class="msg-name">
-                                                        Stok Rendah: {{ $produk->nama_produk }}
+                                                        Stok Rendah: {{ $produk->nama_barang }}
                                                         <span class="msg-time float-end">Stok:
                                                             {{ $produk->stok }}</span>
                                                     </h6>
@@ -92,9 +98,38 @@
                                             </div>
                                         </a>
                                     @endforeach
-                                @else
+                                @endif
+
+                                {{-- Notifikasi Order Butuh Konfirmasi --}}
+                                @if (isset($order_konfirmasi) && count($order_konfirmasi) > 0)
+                                    @foreach ($order_konfirmasi as $order)
+                                        <a class="dropdown-item" href="{{ url('/transaksi/konfirmasi') }}">
+                                            <div class="d-flex align-items-center">
+                                                <div class="notify bg-light-warning text-warning">
+                                                    <i class="bx bx-time-five"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="msg-name">
+                                                        Order Butuh Konfirmasi: {{ $order->nama_pelanggan ?? 'Guest' }}
+                                                        <span class="msg-time float-end">
+                                                            {{ \Carbon\Carbon::parse($order->waktu_transaksi)->format('d/m/Y H:i') }}
+                                                        </span>
+                                                    </h6>
+                                                    <p class="msg-info">
+                                                        Total: Rp {{ number_format($order->total, 0, ',', '.') }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                @endif
+
+                                @if (
+                                    (!isset($stok_rendah) || count($stok_rendah) == 0) &&
+                                    (!isset($order_konfirmasi) || count($order_konfirmasi) == 0)
+                                )
                                     <div class="text-center text-muted py-3">
-                                        Tidak ada notifikasi stok rendah.
+                                        Tidak ada notifikasi.
                                     </div>
                                 @endif
                             </div>

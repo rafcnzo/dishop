@@ -27,26 +27,17 @@
             <div class="card-body">
                 <form id="filter-form">
                     <div class="row g-3">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label">Tanggal Mulai</label>
                             <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai"
-                                value="{{ date('Y-m-01') }}">
+                                value="{{ request('tanggal_mulai', date('Y-m-01')) }}">
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label">Tanggal Selesai</label>
                             <input type="date" class="form-control" id="tanggal_selesai" name="tanggal_selesai"
-                                value="{{ date('Y-m-d') }}">
+                                value="{{ request('tanggal_selesai', date('Y-m-d')) }}">
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label">Status Transaksi</label>
-                            <select class="form-select" id="status" name="status">
-                                <option value="">Semua Status</option>
-                                <option value="selesai">Selesai</option>
-                                <option value="pending">Pending</option>
-                                <option value="dibatalkan">Dibatalkan</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 d-flex align-items-end">
+                        <div class="col-md-4 d-flex align-items-end">
                             <button type="button" class="btn btn-primary me-2" onclick="applyFilter()">
                                 <i class="bx bx-search"></i> Filter
                             </button>
@@ -151,6 +142,46 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="modalDetailTransaksi" tabindex="-1" aria-labelledby="modalDetailTransaksiLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalDetailTransaksiLabel">Detail Transaksi <span
+                            id="detailTransaksiId"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <strong>Pelanggan:</strong> <span id="detailPelanggan"></span><br>
+                        <strong>Waktu Transaksi:</strong> <span id="detailWaktu"></span><br>
+                        <strong>Total:</strong> <span id="detailTotal"></span>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="tbl-detail-barang" class="table table-bordered table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Nama Barang</th>
+                                    <th>Qty</th>
+                                    <th>Harga Satuan</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4">
+                        <button class="btn btn-primary" id="btnLihatBukti">Lihat Bukti Transaksi</button>
+                    </div>
+                    <div id="buktiTransaksiContainer" class="mt-3" style="display:none;">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('script')
@@ -165,7 +196,9 @@
                 chart: {
                     type: 'line',
                     height: 300,
-                    toolbar: { show: false }
+                    toolbar: {
+                        show: false
+                    }
                 },
                 series: [{
                     name: 'Penjualan Harian',
@@ -174,12 +207,14 @@
                 xaxis: {
                     categories: [],
                     labels: {
-                        style: { fontSize: '13px' }
+                        style: {
+                            fontSize: '13px'
+                        }
                     }
                 },
                 yaxis: {
                     labels: {
-                        formatter: function (val) {
+                        formatter: function(val) {
                             return 'Rp ' + val.toLocaleString('id-ID');
                         }
                     }
@@ -195,7 +230,9 @@
                     }
                 },
                 colors: ['#4bc0c0'],
-                dataLabels: { enabled: false }
+                dataLabels: {
+                    enabled: false
+                }
             };
             chartPenjualan = new ApexCharts(document.querySelector("#chartPenjualan"), optionsPenjualan);
             chartPenjualan.render();
@@ -204,29 +241,29 @@
                 chart: {
                     type: 'donut',
                     height: 350,
-                    toolbar: { show: false }
+                    toolbar: {
+                        show: false
+                    }
                 },
                 labels: [
                     'Selesai',
                     'Pending',
                     'Dibatalkan',
-                    'Diterima',
-                    'Menunggu Konfirmasi',
-                    'Diproses'
+                    'Menunggu Konfirmasi'
                 ],
-                series: [0, 0, 0, 0, 0, 0],
+                series: [0, 0, 0, 0],
                 colors: [
-                    'rgba(54, 162, 235, 0.8)',    // Selesai
-                    'rgba(255, 206, 86, 0.8)',    // Pending
-                    'rgba(255, 99, 132, 0.8)',    // Dibatalkan
-                    'rgba(75, 192, 192, 0.8)',    // Diterima
-                    'rgba(153, 102, 255, 0.8)',   // Menunggu Konfirmasi
-                    'rgba(255, 159, 64, 0.8)'     // Diproses
+                    'rgba(54, 162, 235, 0.8)', // Selesai
+                    'rgba(255, 206, 86, 0.8)', // Pending
+                    'rgba(255, 99, 132, 0.8)', // Dibatalkan
+                    'rgba(153, 102, 255, 0.8)' // Menunggu Konfirmasi
                 ],
                 legend: {
                     position: 'bottom'
                 },
-                dataLabels: { enabled: true },
+                dataLabels: {
+                    enabled: true
+                },
                 tooltip: {
                     y: {
                         formatter: function(val) {
@@ -250,7 +287,6 @@
                     data: function(d) {
                         d.tanggal_mulai = $('#tanggal_mulai').val();
                         d.tanggal_selesai = $('#tanggal_selesai').val();
-                        d.status = $('#status').val();
                     },
                     beforeSend: function() {
                         showLoading();
@@ -295,15 +331,33 @@
                         data: 'action',
                         name: 'action',
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        exportable: false, // kolom action tidak diexport
+                        printable: false // kolom action tidak diprint
                     }
                 ],
                 order: [
                     [2, 'desc']
                 ],
                 dom: 'Bfrtip',
-                buttons: [
-                    'copy', 'csv', 'excel', 'pdf', 'print'
+                buttons: [{
+                        extend: 'excel',
+                        exportOptions: {
+                            columns: ':not(:last-child)' // kolom terakhir (action) tidak diexport
+                        }
+                    },
+                    {
+                        extend: 'pdf',
+                        exportOptions: {
+                            columns: ':not(:last-child)'
+                        }
+                    },
+                    {
+                        extend: 'print',
+                        exportOptions: {
+                            columns: ':not(:last-child)'
+                        }
+                    }
                 ]
             });
 
@@ -317,11 +371,9 @@
                     data: function(d) {
                         d.tanggal_mulai = $('#tanggal_mulai').val();
                         d.tanggal_selesai = $('#tanggal_selesai').val();
-                        d.status = $('#status').val();
                     }
                 },
-                columns: [
-                    {
+                columns: [{
                         data: 'DT_RowIndex',
                         name: 'DT_RowIndex',
                         orderable: false,
@@ -370,12 +422,12 @@
                 data: {
                     tanggal_mulai: $('#tanggal_mulai').val(),
                     tanggal_selesai: $('#tanggal_selesai').val(),
-                    status: $('#status').val()
                 },
                 success: function(response) {
-                    // Update ApexChart Penjualan
                     chartPenjualan.updateOptions({
-                        xaxis: { categories: response.labels }
+                        xaxis: {
+                            categories: response.labels
+                        }
                     });
                     chartPenjualan.updateSeries([{
                         name: 'Penjualan Harian',
@@ -413,8 +465,6 @@
                 return;
             }
 
-            // Reload all components
-            loadSummaryData();
             loadChartData();
             tableLaporan.ajax.reload();
             tableProdukTerlaris.ajax.reload();
@@ -429,27 +479,87 @@
         }
 
         function exportData() {
-            // Ambil parameter filter
             const tanggalMulai = $('#tanggal_mulai').val();
             const tanggalSelesai = $('#tanggal_selesai').val();
-            const status = $('#status').val() || 'ALL';
 
-            // Encode parameter ke base64 sesuai kebutuhan controller
             const tglAwalEncoded = btoa(tanggalMulai ? tanggalMulai : 'ALL');
             const tglAkhirEncoded = btoa(tanggalSelesai ? tanggalSelesai : 'ALL');
-            const statusEncoded = btoa(status);
 
-            // Route exportDetail sesuai controller
-            const url = "{{ url('laporan/export-detail') }}/" + tglAwalEncoded + "/" + tglAkhirEncoded + "/" + statusEncoded;
+            const url = "{{ url('laporan/export-detail') }}/" + tglAwalEncoded + "/" + tglAkhirEncoded;
 
             window.open(url, '_blank');
         }
 
-        function viewDetail(id) {
-            window.open("{{ route('transaksi.detail', '') }}/" + id, '_blank');
+        function viewDetail(transaksiId) {
+            $('#detailPelanggan, #detailWaktu, #detailTotal').text('');
+            $('#tbl-detail-barang tbody').empty();
+            $('#buktiTransaksiContainer').hide().empty();
+
+            const url = `{{ url('/transaksi/detail') }}/${transaksiId}`;
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (data.success) {
+                        const trx = data.transaksi;
+                        const pembayaran = data.pembayaran;
+
+                        $('#detailTransaksiId').text(`#${trx.id}`);
+                        $('#detailPelanggan').text(trx.pelanggan);
+                        $('#detailWaktu').text(new Date(trx.waktu_transaksi).toLocaleString('id-ID'));
+
+                        const totalFormatted = new Intl.NumberFormat('id-ID', {
+                            style: 'currency',
+                            currency: 'IDR'
+                        }).format(trx.total);
+                        $('#detailTotal').text(totalFormatted);
+
+                        const detailTableBody = $('#tbl-detail-barang tbody');
+                        detailTableBody.empty();
+                        data.detail_items.forEach((item, idx) => {
+                            const subtotal = item.qty * item.harga;
+                            const row = `<tr>
+                                <td>${idx + 1}</td>
+                                <td>${item.nama_barang}</td>
+                                <td>${item.qty}</td>
+                                <td>${new Intl.NumberFormat('id-ID').format(item.harga)}</td>
+                                <td>${new Intl.NumberFormat('id-ID').format(subtotal)}</td>
+                            </tr>`;
+                            detailTableBody.append(row);
+                        });
+
+                        if (pembayaran) {
+                            const buktiUrl =
+                                `{{ asset('storage/bukti_pembayaran') }}/${pembayaran.bukti_pembayaran}`;
+                            $('#btnLihatBukti').show().data('bukti-url', buktiUrl);
+                        } else {
+                            $('#btnLihatBukti').hide();
+                        }
+
+                        $('#modalDetailTransaksi').modal('show');
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('AJAX Error:', textStatus, errorThrown);
+                    alert('Gagal memuat detail transaksi. Silakan coba lagi.');
+                }
+            });
+        }
+
+        function tampilkanBuktiPembayaran() {
+            const url = $('#btnLihatBukti').data('bukti-url');
+            const container = $('#buktiTransaksiContainer');
+
+            container.html(
+                `<hr><h5>Bukti Pembayaran:</h5><img src="${url}" class="img-fluid" alt="Bukti Pembayaran">`
+            );
+            container.slideDown();
         }
 
         $(document).ready(function() {
+            showLoading();
             initCharts();
             initTables();
             loadChartData();
@@ -457,6 +567,10 @@
             setInterval(function() {
                 applyFilter();
             }, 300000);
+
+            $(document).on('click', '#btnLihatBukti', function() {
+                tampilkanBuktiPembayaran();
+            });
         });
     </script>
 @endsection

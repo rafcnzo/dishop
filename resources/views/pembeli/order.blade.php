@@ -465,21 +465,21 @@
 
         /* Modal Enhancements */
         /* .modal-content {
-                                            border: none;
-                                            border-radius: 16px;
-                                            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-                                        }
+                                                        border: none;
+                                                        border-radius: 16px;
+                                                        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+                                                    }
 
-                                        .modal-header {
-                                            background: var(--pakistan-green);
-                                            color: white;
-                                            border-radius: 16px 16px 0 0;
-                                            padding: 1.5rem;
-                                        }
+                                                    .modal-header {
+                                                        background: var(--pakistan-green);
+                                                        color: white;
+                                                        border-radius: 16px 16px 0 0;
+                                                        padding: 1.5rem;
+                                                    }
 
-                                        .modal-title {
-                                            font-weight: 700;
-                                        } */
+                                                    .modal-title {
+                                                        font-weight: 700;
+                                                    } */
 
         .btn-close {
             filter: invert(1);
@@ -619,14 +619,15 @@
                                 <button type="button" class="btn-primary-custom" data-bs-toggle="modal"
                                     data-bs-target="#orderDetailsModal" data-order-id="{{ $order->id }}"
                                     data-order-items='@json($order->items)'
-                                    data-order-total="Rp {{ number_format($order->total, 0, ',', '.') }}"
-                                    data-invoice-url="#">
+                                    data-order-total="Rp {{ number_format($order->total, 0, ',', '.') }}">
                                     <i class="fas fa-eye"></i> Lihat Detail
                                 </button>
-                                <a href="{{ route('invoice.show', $order->id) }}" class="btn-outline-custom"
-                                    target="_blank">
-                                    <i class="fas fa-download"></i> Download Invoice
-                                </a>
+                                @if (!empty($order) && $order->keterangan !== 'dibatalkan')
+                                    <a href="{{ route('invoice.show', $order->id) }}" class="btn-outline-custom"
+                                        target="_blank">
+                                        <i class="fas fa-download"></i> Download Invoice
+                                    </a>
+                                @endif
                                 @if ($order->timeline_status == 'pending')
                                     <a href="{{ route('payment.confirmation', $order->id) }}"
                                         class="btn btn-success-custom">
@@ -733,9 +734,6 @@
                         <span style="color: var(--pakistan-green);">Total Pembayaran:</span>
                         <strong class="fs-5 ms-2" style="color: var(--pakistan-green);" id="modal-order-total"></strong>
                     </div>
-                    <a  href="{{ route('invoice.show', $order->id) }}" id="modal-invoice-btn" class="btn-primary-custom" target="_blank">
-                        <i class="fas fa-file-invoice"></i> Lihat Invoice
-                    </a>
                 </div>
             </div>
         </div>
@@ -759,37 +757,40 @@
             orderDetailsModal.addEventListener('show.bs.modal', function(event) {
                 var button = event.relatedTarget;
 
+                // Ambil semua data dari tombol, termasuk status
                 var orderId = button.getAttribute('data-order-id');
                 var orderItems = JSON.parse(button.getAttribute('data-order-items'));
                 var orderTotal = button.getAttribute('data-order-total');
                 var invoiceUrl = button.getAttribute('data-invoice-url');
+                var orderStatus = button.getAttribute('data-order-status'); // <-- AMBIL STATUS DARI TOMBOL
 
+                // Dapatkan elemen-elemen di dalam modal
                 var modalTitleId = orderDetailsModal.querySelector('#modal-order-id');
                 var modalItemsContainer = orderDetailsModal.querySelector('#modal-order-items');
                 var modalTotal = orderDetailsModal.querySelector('#modal-order-total');
-                var modalInvoiceBtn = orderDetailsModal.querySelector('#modal-invoice-btn');
 
+                // Isi konten modal seperti biasa
                 modalItemsContainer.innerHTML = '';
                 modalTitleId.textContent = '#' + orderId;
                 modalTotal.textContent = orderTotal;
-                modalInvoiceBtn.setAttribute('href', invoiceUrl);
 
+                // Loop untuk menampilkan item (tidak berubah)
                 orderItems.forEach(function(item, index) {
                     var itemHtml = `
-                        <div class="list-group-item d-flex align-items-center">
-                            <img src="${item.image_url}" alt="${item.nama_barang}" 
-                                 class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid var(--beige);">
-                            <div class="flex-grow-1">
-                                <h6 class="fw-bold mb-1 text-start" style="color: var(--pakistan-green);">${item.nama_barang}</h6>
-                                <div class="d-flex justify-content-between align-items-center text-start">
-                                    <small class="text-muted">Qty: ${item.qty}</small>
-                                    <span class="fw-bold" style="color: var(--pakistan-green);">
-                                        Rp ${new Intl.NumberFormat('id-ID').format(item.harga)}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+            <div class="list-group-item d-flex align-items-center">
+                <img src="${item.image_url}" alt="${item.nama_barang}" 
+                     class="rounded me-3" style="width: 60px; height: 60px; object-fit: cover; border: 2px solid var(--beige);">
+                <div class="flex-grow-1">
+                    <h6 class="fw-bold mb-1 text-start" style="color: var(--pakistan-green);">${item.nama_barang}</h6>
+                    <div class="d-flex justify-content-between align-items-center text-start">
+                        <small class="text-muted">Qty: ${item.qty}</small>
+                        <span class="fw-bold" style="color: var(--pakistan-green);">
+                            Rp ${new Intl.NumberFormat('id-ID').format(item.harga)}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        `;
                     modalItemsContainer.insertAdjacentHTML('beforeend', itemHtml);
                 });
             });

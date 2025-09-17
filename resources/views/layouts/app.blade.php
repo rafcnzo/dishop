@@ -15,6 +15,7 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <link href="{{ asset('backendpenjual/assets/css/pace.min.css') }}" rel="stylesheet" />
 
     <!-- Google Fonts -->
     <link
@@ -600,6 +601,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="{{ asset('backendpenjual/assets/js/pace.min.js') }}"></script>
 
     <!-- Custom JS -->
     <script>
@@ -710,9 +712,22 @@
                         if (typeof updateCheckoutTotals === 'function') {
                             updateCheckoutTotals(response);
                         }
+                        // Tampilkan notifikasi dari backend jika ada
+                        if (response && typeof response.message !== 'undefined') {
+                            if (response.success === false) {
+                                toastr.error(response.message);
+                            } else if (response.success === true) {
+                                toastr.success(response.message);
+                            }
+                        }
                     },
-                    error: function() {
-                        toastr.error('Terjadi kesalahan. Silakan coba lagi.');
+                    error: function(xhr) {
+                        // Jika backend mengirim pesan error, tampilkan
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            toastr.error(xhr.responseJSON.message);
+                        } else {
+                            toastr.error('Terjadi kesalahan. Silakan coba lagi.');
+                        }
                     }
                 });
             }
@@ -726,6 +741,11 @@
                 let productId = $(this).data('product-id');
                 sendCartRequest(`/cart/add/${productId}`, 'POST');
                 toastr.success('Produk berhasil ditambahkan ke keranjang!');
+                let offcanvas = document.getElementById('shoppingCartOffcanvas');
+                if (offcanvas) {
+                    let bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(offcanvas);
+                    bsOffcanvas.show();
+                }
             });
 
             $(document).on('click', '.qty-change', function() {
@@ -744,7 +764,6 @@
             });
 
             $(document).on('click', '.remove-item-btn', function() {
-                // Ambil ID produk dari tombol yang di-klik
                 let productId = $(this).data('product-id');
 
 
@@ -825,13 +844,13 @@
 
                                     let listItem = `
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <a href="/product/${product.slug}" class="text-decoration-none text-dark d-flex align-items-center">
+                                        <div class="d-flex align-items-center">
                                             <img src="${product.image_url}" width="50" class="rounded me-3" alt="${product.nama_barang}">
                                             <div>
                                                 <div class="fw-bold">${product.nama_barang}</div>
                                                 <small>${priceFormatted}</small>
                                             </div>
-                                        </a>
+                                        </div>
                                         ${actionButton}
                                     </li>`;
                                     resultsList.append(listItem);

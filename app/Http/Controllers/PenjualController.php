@@ -18,14 +18,16 @@ class PenjualController extends Controller
         $data = [
             'produk'      => DB::table('products')->count(),
             'users'       => DB::table('users')->count(),
-            'transaksi'   => DB::table('transaksi')->count(),
+            'transaksi'   => DB::table('transaksi')->where('keterangan', 'selesai')->count(),
             'total30hari' => DB::table('transaksi')
+                ->where('keterangan', 'selesai')
                 ->whereBetween('waktu_transaksi', [
-                    now()->startOfMonth()->toDateString(),
-                    now()->toDateString(),
+                    now()->subDays(29)->startOfDay()->toDateTimeString(),
+                    now()->endOfDay()->toDateTimeString(),
                 ])->sum('total'),
-            'totalorders' => DB::table('transaksi')->sum('total'),
+            'totalorders' => DB::table('transaksi')->where('keterangan', 'selesai')->sum('total'),
             'totaltoday'  => DB::table('transaksi')
+                ->where('keterangan', 'selesai')
                 ->whereDate('waktu_transaksi', now()->toDateString())
                 ->sum('total'),
         ];
@@ -36,7 +38,21 @@ class PenjualController extends Controller
             ->orderBy('stok', 'asc')
             ->get();
 
+        $order_konfirmasi = DB::table('transaksi')
+            ->where('keterangan', 'menunggu konfirmasi')
+            ->join('users', 'transaksi.pelanggan_id', '=', 'users.id')
+            ->select(
+                'transaksi.id',
+                'users.username as nama_pelanggan',
+                'transaksi.total',
+                'transaksi.waktu_transaksi',
+                'transaksi.keterangan'
+            )
+            ->orderBy('transaksi.waktu_transaksi', 'asc')
+            ->get();
+
         $data['stok_rendah'] = $stok_rendah;
+        $data['order_konfirmasi'] = $order_konfirmasi;
 
         return view('penjual.index', $data);
     }
@@ -115,7 +131,22 @@ class PenjualController extends Controller
 
     public function laporanIndex()
     {
-        return view('penjual.laporan.index');
+        // Ambil produk dengan stok rendah (misal <= 5)
+        $stok_rendah = DB::table('products')
+            ->where('stok', '<=', 5)
+            ->orderBy('stok', 'asc')
+            ->get();
+
+        // Ambil order yang menunggu konfirmasi
+        $order_konfirmasi = DB::table('transaksi')
+            ->where('keterangan', 'menunggu konfirmasi')
+            ->orderBy('waktu_transaksi', 'desc')
+            ->get();
+
+        return view('penjual.laporan.index', [
+            'stok_rendah' => $stok_rendah,
+            'order_konfirmasi' => $order_konfirmasi,
+        ]);
     }
 
     public function laporanData(Request $request): JsonResponse
@@ -131,17 +162,13 @@ class PenjualController extends Controller
                 'pembayaran.metode as metode_bayar',
                 'transaksi.pelanggan_id',
                 'u.nama as nama_pelanggan'
-            );
+            )
+            ->whereIn('transaksi.keterangan', ['selesai', 'dibatalkan']);
 
         if ($request->filled('tanggal_mulai') && $request->filled('tanggal_selesai')) {
-            // PERBAIKAN DI SINI
             $tanggalMulai   = $request->tanggal_mulai . ' 00:00:00';
             $tanggalSelesai = $request->tanggal_selesai . ' 23:59:59';
             $query->whereBetween('transaksi.waktu_transaksi', [$tanggalMulai, $tanggalSelesai]);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('transaksi.keterangan', $request->status);
         }
 
         return DataTables::of($query)
@@ -179,11 +206,8 @@ class PenjualController extends Controller
             ->addColumn('action', function ($row) {
                 return '
                     <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-sm btn-info" onclick="viewDetail(' . $row->id . ')" title="Detail">
+                        <button type="button" class="btn btn-sm btn-info" onclick="viewDetail(\'' . $row->id . '\')" title="Detail">
                             <i class="bx bx-show"></i>
-                        </button>
-                        <button type="button" class="btn btn-sm btn-success" onclick="printInvoice(' . $row->id . ')" title="Print">
-                            <i class="bx bx-printer"></i>
                         </button>
                     </div>
                 ';
@@ -200,7 +224,6 @@ class PenjualController extends Controller
 
         $data = DB::table('transaksi')
             ->selectRaw('DATE(waktu_transaksi) as tanggal, SUM(total) as total_penjualan')
-            ->where('pelanggan_id', auth()->id())
             ->where('keterangan', 'selesai')
             ->whereBetween('waktu_transaksi', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->groupBy('tanggal')
@@ -233,9 +256,7 @@ class PenjualController extends Controller
             'selesai',
             'pending',
             'dibatalkan',
-            'diterima',
-            'menunggu konfirmasi',
-            'diproses',
+            'menunggu konfirmasi'
         ];
 
         $query = DB::table('transaksi');
@@ -281,11 +302,8 @@ class PenjualController extends Controller
                 DB::raw('SUM(td.qty * td.harga) as total_penjualan'),
                 DB::raw('MAX(p.stok) as stok_terakhir'),
                 'p.harga as harga_satuan'
-            );
-
-        if ($request->filled('status')) {
-            $query->where('t.keterangan', $request->status);
-        }
+            )
+            ->where('t.keterangan', '=', 'selesai');
 
         if ($request->filled('tanggal_mulai') && $request->filled('tanggal_selesai')) {
             $tanggalMulai   = $request->tanggal_mulai . ' 00:00:00';
@@ -312,7 +330,7 @@ class PenjualController extends Controller
             ->make(true);
     }
 
-    public function exportDetail($tgl_awal, $tgl_akhir, $status)
+    public function exportDetail($tgl_awal, $tgl_akhir)
     {
         $error_level = error_reporting();
         error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
@@ -322,7 +340,6 @@ class PenjualController extends Controller
         try {
             $awal_decoded   = base64_decode($tgl_awal);
             $akhir_decoded  = base64_decode($tgl_akhir);
-            $status_decoded = base64_decode($status);
 
             $query = DB::table('transaksi as t')
                 ->join('transaksi_detail as td', 't.id', '=', 'td.transaksi_id')
@@ -448,10 +465,11 @@ class PenjualController extends Controller
                 'users.nama as nama_user'
             )
             ->where('transaksi.id', $id)
+            ->where('transaksi.keterangan', 'selesai')
             ->first();
 
         if (! $transaksi) {
-            abort(404, 'Transaksi tidak ditemukan');
+            abort(404, 'Transaksi tidak ditemukan atau belum selesai');
         }
 
         $detail = DB::table('transaksi_detail')
@@ -462,123 +480,12 @@ class PenjualController extends Controller
                 'transaksi_detail.qty',
                 DB::raw('transaksi_detail.qty * transaksi_detail.harga as subtotal')
             )
+            ->where('transaksi_detail.transaksi_id', $id)
             ->get();
 
         return response()->json([
             'transaksi' => $transaksi,
             'detail'    => $detail,
-        ]);
-    }
-
-    public function laporanPeriode(Request $request)
-    {
-        $periode = $request->periode ?? 'bulanan';
-        $tahun   = $request->tahun ?? now()->year;
-        $bulan   = $request->bulan ?? now()->month;
-
-        $query = DB::table('transaksi')
-            ->where('pelanggan_id', auth()->id())
-            ->where('keterangan', 'selesai');
-
-        switch ($periode) {
-            case 'harian':
-                $data = $query->whereYear('waktu_transaksi', $tahun)
-                    ->whereMonth('waktu_transaksi', $bulan)
-                    ->selectRaw('DAY(waktu_transaksi) as periode, SUM(total) as total')
-                    ->groupBy('periode')
-                    ->orderBy('periode')
-                    ->get();
-                break;
-
-            case 'mingguan':
-                $data = $query->whereYear('waktu_transaksi', $tahun)
-                    ->selectRaw('WEEK(waktu_transaksi) as periode, SUM(total) as total')
-                    ->groupBy('periode')
-                    ->orderBy('periode')
-                    ->get();
-                break;
-
-            case 'bulanan':
-                $data = $query->whereYear('waktu_transaksi', $tahun)
-                    ->selectRaw('MONTH(waktu_transaksi) as periode, SUM(total) as total')
-                    ->groupBy('periode')
-                    ->orderBy('periode')
-                    ->get();
-                break;
-
-            case 'tahunan':
-                $data = $query
-                    ->selectRaw('YEAR(waktu_transaksi) as periode, SUM(total) as total')
-                    ->groupBy('periode')
-                    ->orderBy('periode')
-                    ->get();
-                break;
-            default:
-                $data = collect();
-        }
-
-        return response()->json($data);
-    }
-
-    public function analytics(Request $request)
-    {
-        $startDate = now()->startOfMonth();
-        $endDate   = now();
-
-        $penjualanHariIni = DB::table('transaksi')
-            ->where('pelanggan_id', auth()->id())
-            ->where('keterangan', 'selesai')
-            ->whereDate('waktu_transaksi', now()->toDateString())
-            ->sum('total');
-
-        $penjualanBulanIni = DB::table('transaksi')
-            ->where('pelanggan_id', auth()->id())
-            ->where('keterangan', 'selesai')
-            ->whereBetween('waktu_transaksi', [$startDate, $endDate])
-            ->sum('total');
-
-        $penjualanBulanLalu = DB::table('transaksi')
-            ->where('pelanggan_id', auth()->id())
-            ->where('keterangan', 'selesai')
-            ->whereBetween('waktu_transaksi', [
-                now()->subMonth()->startOfMonth(),
-                now()->subMonth()->endOfMonth(),
-            ])
-            ->sum('total');
-
-        $growthPercentage = 0;
-        if ($penjualanBulanLalu > 0) {
-            $growthPercentage = (($penjualanBulanIni - $penjualanBulanLalu) / $penjualanBulanLalu) * 100;
-        }
-
-        $topProduk = DB::table('transaksi_detail')
-            ->join('transaksi', 'transaksi_detail.transaksi_id', '=', 'transaksi.id')
-            ->join('products', 'transaksi_detail.barang_id', '=', 'products.id')
-            ->where('transaksi.keterangan', 'selesai')
-            ->whereBetween('transaksi.waktu_transaksi', [$startDate, $endDate])
-            ->select(
-                'transaksi_detail.barang_id',
-                'products.nama_barang',
-                DB::raw('SUM(transaksi_detail.qty) as total_qty'),
-                DB::raw('SUM(transaksi_detail.harga * transaksi_detail.qty) as total_penjualan')
-            )
-            ->groupBy('transaksi_detail.barang_id', 'products.nama_barang')
-            ->orderByDesc('total_penjualan')
-            ->limit(5)
-            ->get();
-
-        return response()->json([
-            'penjualan_hari_ini'   => $penjualanHariIni,
-            'penjualan_bulan_ini'  => $penjualanBulanIni,
-            'penjualan_bulan_lalu' => $penjualanBulanLalu,
-            'growth_percentage'    => round($growthPercentage, 2),
-            'top_produk'           => $topProduk->map(function ($item) {
-                return [
-                    'nama'      => $item->nama_barang,
-                    'qty'       => $item->total_qty,
-                    'penjualan' => $item->total_penjualan,
-                ];
-            }),
         ]);
     }
 }

@@ -69,10 +69,9 @@ class CartController extends Controller
         if ($quantity > $product->stok) {
             return response()->json([
                 'success' => false,
-                'message' => 'Stok tidak mencukupi! Hanya tersisa ' . $product->stok,
+                'message' => 'Stok tidak cukup! Stok tersedia hanya ' . $product->stok . ' item.',
             ], 422);
         }
-        $quantity = $request->input('quantity');
 
         if (isset($cart[$productId]) && $quantity > 0) {
             $cart[$productId]['qty'] = $quantity;
@@ -81,7 +80,17 @@ class CartController extends Controller
             return $this->getCartDataForResponse();
         }
 
-        return response()->json(['success' => false, 'message' => 'Gagal memperbarui keranjang.']);
+        if ($quantity <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Jumlah produk harus lebih dari 0.',
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal memperbarui keranjang. Produk tidak ditemukan di keranjang.',
+        ]);
     }
 
     public function removeCartItem($productId)
