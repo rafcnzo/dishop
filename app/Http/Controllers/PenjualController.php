@@ -131,13 +131,11 @@ class PenjualController extends Controller
 
     public function laporanIndex()
     {
-        // Ambil produk dengan stok rendah (misal <= 5)
         $stok_rendah = DB::table('products')
             ->where('stok', '<=', 5)
             ->orderBy('stok', 'asc')
             ->get();
 
-        // Ambil order yang menunggu konfirmasi
         $order_konfirmasi = DB::table('transaksi')
             ->where('keterangan', 'menunggu konfirmasi')
             ->orderBy('waktu_transaksi', 'desc')
@@ -364,10 +362,6 @@ class PenjualController extends Controller
                     Carbon::parse($awal_decoded)->startOfDay(),
                     Carbon::parse($akhir_decoded)->endOfDay(),
                 ]);
-            }
-
-            if ($status_decoded != 'ALL') {
-                $query->where('t.keterangan', $status_decoded);
             }
 
             $query->orderBy('t.id', 'asc')->orderBy('td.id', 'asc');

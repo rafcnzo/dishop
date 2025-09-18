@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('pembayaran', function (Blueprint $table) {
             $table->bigIncrements('id');
-
-            $table->unsignedBigInteger('transaksi_id');
+            $table->string('transaksi_id', 25);
             $table->string('bukti_transfer')->nullable();
             $table->enum('status_pembayaran', ['T', 'F'])->nullable()->comment('T=Disetujui, F=Ditolak');
             $table->string('metode')->nullable();
             $table->string('keterangan')->nullable();
             $table->dateTime('waktu')->nullable()->comment('Waktu pembayaran');
+            $table->dateTime('dtcrea')->nullable();
             $table->dateTime('dtmodi')->nullable();
 
             $table->foreign('transaksi_id')->references('id')->on('transaksi')->onDelete('cascade');
